@@ -1,0 +1,44 @@
+Tavo Images / «Картинки»
+
+Based on notsosillynotsoimages by aceeenvw.
+Copyright (C) 2025-2026 aceeenvw
+https://github.com/aceeenvw/notsosillynotsoimages
+Upstream snapshot: 270e9215b2c8995c705144900415aa2e05190af5
+
+Original project: SillyImages by 0xl0cal (local & astera).
+https://github.com/0xl0cal/sillyimages
+
+Tavo adaptation and modifications:
+Copyright (C) 2026 NotFound_404 / Not_Found
+Maintainer: NotFound404dev
+https://github.com/NotFound404dev/tavo-images
+
+The Tavo version uses a different plugin lifecycle, headless engine,
+message fragments, settings UI, storage, prompt pipeline, studio and
+integrations. It retains adapted helper logic from the referenced project.
+Changes and publication packaging are documented in CHANGELOG.md.
+Publication packaging date: 2026-11-03.
+
+Additional code references, functional sources, design inspiration and
+embedded prompt/style authors are listed with their respective roles in
+CREDITS.md, included with this package. In particular: tizenry / Raven
+generation, TensorAI, Monblant / extblocks, MommyCat / delidgi, Kamoi,
+Rakshakti, Ksyu & Travadd, Shino and @tavvvvoooosty.
+Authorship of third-party prompts and styles remains with their authors.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program. If not, see https://www.gnu.org/licenses/.
+
+Keep the original copyright and license notices when distributing or
+adapting this project, credit aceeenvw and 0xl0cal, and mark modifications.
+See LICENSE for the full terms.

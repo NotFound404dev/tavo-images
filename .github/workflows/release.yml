@@ -1,0 +1,54 @@
+name: Build and release
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - plugin_p2/manifest.json
+      - .github/workflows/release.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.repository }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    if: github.repository == 'NotFound404dev/tavo-images'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out the triggering commit
+        env:
+          REPOSITORY: ${{ github.repository }}
+          COMMIT_SHA: ${{ github.sha }}
+        run: |
+          git init .
+          git remote add origin "https://github.com/${REPOSITORY}.git"
+          git fetch --depth=1 origin "$COMMIT_SHA"
+          git checkout --detach FETCH_HEAD
+      - name: Build and verify
+        run: |
+          python3 build.py
+          python3 verify.py
+          cp dist/SHA256SUMS /tmp/tavo-first-build.sha256
+          python3 build.py
+          cmp dist/SHA256SUMS /tmp/tavo-first-build.sha256
+      - name: Publish a new version
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          COMMIT_SHA: ${{ github.sha }}
+        run: |
+          version=$(python3 -c 'import json; print(json.load(open("plugin_p2/manifest.json"))["version"])')
+          tag="v${version}"
+          if gh release view "$tag" --repo "$GH_REPO" >/dev/null 2>&1; then
+            echo "Release $tag already exists; leaving it unchanged."
+            exit 0
+          fi
+          gh release create "$tag" "dist/tavo-images-${version}.tpg" dist/SHA256SUMS \
+            --repo "$GH_REPO" --target "$COMMIT_SHA" \
+            --title "Tavo Images ${version}" --notes-file release-notes.md

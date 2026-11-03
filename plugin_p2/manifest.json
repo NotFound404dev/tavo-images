@@ -1,0 +1,79 @@
+{
+  "specVersion": 2,
+  "id": "com.notfound404.tavo-images",
+  "name": {
+    "$t": "plugin.name"
+  },
+  "version": "1.38.0",
+  "entry": "entry.js",
+  "author": "Not_Found",
+  "description": {
+    "$t": "plugin.description"
+  },
+  "localization": {
+    "defaultLocale": "ru",
+    "resources": {
+      "ru": "locales/ru.json",
+      "en": "locales/en.json"
+    }
+  },
+  "cover": "cover.png",
+  "permissions": [
+    "message",
+    "generate",
+    "network",
+    "variable",
+    "file",
+    "regex",
+    "input",
+    "lorebook"
+  ],
+  "contributes": {
+    "htmlFragments": [
+      {
+        "id": "iig-image",
+        "src": "ui/image.html",
+        "mount": "/messages/end?role=character"
+      },
+      {
+        "id": "iig-panel",
+        "src": "ui/panel.html",
+        "mount": "/chat/body/end"
+      }
+    ],
+    "settings": {
+      "schema": [
+        {
+          "type": "info",
+          "text": {
+            "$t": "settings.info"
+          },
+          "icon": "info"
+        },
+        {
+          "type": "switch",
+          "key": "fab",
+          "label": {
+            "$t": "settings.fab.label"
+          },
+          "description": {
+            "$t": "settings.fab.description"
+          },
+          "default": false
+        }
+      ]
+    },
+    "inputActions": [
+      {
+        "id": "open",
+        "label": {
+          "$t": "actions.open"
+        },
+        "icon": "icons/menu.png"
+      }
+    ]
+  },
+  "releaseNotes": {
+    "$t": "plugin.releaseNotes"
+  }
+}

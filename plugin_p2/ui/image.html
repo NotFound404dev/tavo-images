@@ -1,0 +1,2522 @@
+<!--
+Tavo Images — Copyright (C) 2026 NotFound_404 / Not_Found.
+Based on notsosillynotsoimages, Copyright (C) 2025-2026 aceeenvw;
+original project: SillyImages by 0xl0cal.
+Modified for Tavo. SPDX-License-Identifier: AGPL-3.0-or-later
+See LICENSE and NOTICE included with this package.
+-->
+<div id="iig-host"></div>
+
+<style>
+  @import url(https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400;1,700&display=swap);
+
+  html, body { margin: 0; padding: 0; background: transparent; }
+
+  .iig-wrap { border-radius: 14px; }
+</style>
+
+<script>
+  var EN_DICT = {"IIG сбой (":"IIG failure (","скрипт":"script","обещание":"promise","Промпт":"Prompt","картинка ·":"picture ·","картинка":"picture","референсы: данные появятся после генерации (или картинка из старой версии)":"references: data appears after generation (or the picture is from an old version)","· не уехало:":"· not sent:","\\nне уехало:":"\\nnot sent:","промпт не сохранён (картинка из старой версии или ещё не создана) — тапни переписать или впиши свой":"no prompt saved (the picture is from an old version or not created yet) — tap rewrite or enter your own","копировать":"copy","переписать":"rewrite","закрыть":"close","заново написать промпт (картинка не трогается)":"rewrite the prompt (the picture stays)","промпт скопирован":"prompt copied","не вышло — выдели и скопируй вручную":"failed — select and copy by hand","сохранить":"save","нарисовать":"draw","сохранить текст как промпт этой картинки":"save the text as this picture’s prompt","сохранить текст и перерисовать картинку по нему":"save the text and redraw the picture from it","промпт пуст — нечего сохранять":"the prompt is empty — nothing to save","промпт сохранён — ↻ на картинке нарисует по нему":"prompt saved — ↻ on the picture draws from it","промпт пуст — рисовать не по чему":"the prompt is empty — nothing to draw from","запись…":"writing…","промпт переписан — тапни ↻ на картинке, чтобы перегенерировать по нему":"prompt rewritten — tap ↻ on the picture to regenerate from it","промпт ещё пишется — загляни сюда через минуту":"the prompt is still being written — check back in a minute","переписать не вышло":"rewrite failed","IIG: фрагмент не знает своего поста — перезайди в чат":"IIG: the fragment does not know its post — reopen the chat","Доработка":"Refinement","что исправить: например, перерисуй левую руку, пальцев должно быть пять":"what to fix: e.g. redraw the left hand, there should be five fingers","доработать":"refine","вернуть":"undo","место отмечено — правка только в нём · тап сюда, чтобы стереть обводку":"the spot is marked — the fix applies only there · tap here to erase the outline","обведи пальцем место, которое надо исправить — или не обводи, тогда правка на всю картинку":"outline the spot to fix with your finger — or do not, then the fix applies to the whole picture","другое":"other","перерисовать в стиле: выбери":"redraw in a style: pick","перерисовать":"redraw","в доски":"to boards","IIG: выбери стиль в списке":"IIG: pick a style from the list","IIG: опиши, что исправить":"IIG: describe what to fix","дорабатываю…":"refining…","[скрыто]":"[hidden]","остановить генерацию":"stop generation","перегенерировать":"regenerate","Пожелание":"Wish","что примерно должно быть на картинке: какой момент поста, кто в кадре, что важно показать":"roughly what should be in the picture: which moment of the post, who is in frame, what matters to show","✦ сгенерировать картинку":"✦ generate picture","написать промпт и нарисовать картинку к этому посту":"write a prompt and draw a picture for this post","✎ добавить пожелание":"✎ add a wish","сначала написать, что примерно должно быть на картинке, потом нарисовать":"first write roughly what should be in the picture, then draw","в избранном — чистка не тронет":"in favorites — cleanup will not touch it","в избранное":"to favorites","IIG: у этой картинки нет ключа — перегенерируй её":"IIG: this picture has no key — regenerate it","IIG: избранное не прочиталось — попробуй ещё раз":"IIG: favorites could not be read — try again","IIG: не вышло сохранить избранное":"IIG: could not save favorites","скачать":"download","промпт":"prompt","улучшить качество":"upscale","ещё три варианта по тому же промпту":"three more variants from the same prompt","предыдущий вариант":"previous variant","следующий вариант":"next variant","картинка Tensor не сохранилась — ссылка истекла":"the Tensor picture was not saved — the link has expired","картинка Tensor по ссылке не загрузилась":"the Tensor picture did not load from its link","картинка не скачалась — показана по ссылке до":"the picture did not download — shown by link until","свой промпт с поста на этом устройстве не принимается: фрагмент не видит хранилище плагина — нажми ↻ без своего промпта":"a custom prompt from the post is not accepted on this device: the fragment cannot see the plugin storage — tap ↻ without a custom prompt","рисую картинку…":"drawing the picture…","улучшаю качество…":"upscaling…","останавливаю…":"stopping…","скачать не вышло:":"download failed:","пишу промпт…":"writing the prompt…","картинка не вышла:":"the picture failed:","движок не увидел этот пост":"the engine did not see this post","жду картинку…":"waiting for the picture…","загрузка":"loading"};
+  var L_CACHE = {};
+  var L_AT = 0;
+  var L_LANG = 'ru';
+
+  function L(s) {
+    var now = Date.now();
+    if (now - L_AT > 1000) {
+      L_AT = now;
+      var was = L_LANG;
+      try {
+        L_LANG = window.localStorage.getItem('iig_lang') === 'en' ? 'en' : 'ru';
+      } catch (e) {}
+      if (was !== L_LANG) L_CACHE = {};
+    }
+    if (L_LANG !== 'en' || typeof s !== 'string') return s;
+    var hit = L_CACHE[s];
+    if (hit !== undefined) return hit;
+    var parts = s.split(/(<[^>]*>)/);
+    for (var i = 0; i < parts.length; i++) {
+      var p = parts[i];
+      if (!p) continue;
+      if (p.charAt(0) === '<') {
+        parts[i] = p.replace(/((?:placeholder|title|alt)=")([^"]*)(")/g, function(all, a, v, b) {
+          var tv = EN_DICT[v.trim()];
+          return tv !== undefined ? (a + tv + b) : all;
+        });
+        continue;
+      }
+      var m = p.match(/^(\s*)([\s\S]*?)(\s*)$/);
+      var tr = EN_DICT[m[2]];
+      if (tr !== undefined) parts[i] = m[1] + tr + m[3];
+    }
+    var out = parts.join('');
+    L_CACHE[s] = out;
+    return out;
+  }
+
+
+(function () {
+
+  var iigScriptEl = null;
+  try { iigScriptEl = document.currentScript || null; } catch (e0) {}
+
+  var IIG_INLINE = false;
+  try {
+    IIG_INLINE = (window.frameElement == null);
+  } catch (e0) {
+    IIG_INLINE = false;
+  }
+  var hostEl = null;
+  try {
+    var pv0 = iigScriptEl && iigScriptEl.previousElementSibling;
+    while (pv0 && pv0.id !== 'iig-host') pv0 = pv0.previousElementSibling;
+    hostEl = pv0 || null;
+  } catch (e0) {}
+  if (!hostEl) { try { hostEl = document.getElementById('iig-host'); } catch (e0) {} }
+  if (IIG_INLINE) {
+
+    try {
+      var st0 = iigScriptEl && iigScriptEl.previousElementSibling;
+      while (st0 && String(st0.tagName).toUpperCase() !== 'STYLE') st0 = st0.previousElementSibling;
+      if (st0) st0.textContent = '.iig-wrap{border-radius:14px}';
+    } catch (e0) {}
+  }
+
+  function iigGone() {
+    try { return !!(hostEl && !hostEl.isConnected); } catch (e0) { return false; }
+  }
+  var iigLsn = [];
+  function iigListen(tgt, type, fn) {
+    try { tgt.addEventListener(type, fn); iigLsn.push([tgt, type, fn]); } catch (e0) {}
+  }
+
+  var iigTimersOff = null;
+  var iigDead = false;
+  function iigTeardown() {
+    if (iigDead) return;
+    iigDead = true;
+    for (var li = 0; li < iigLsn.length; li++) {
+      try { iigLsn[li][0].removeEventListener(iigLsn[li][1], iigLsn[li][2]); } catch (e0) {}
+    }
+    iigLsn.length = 0;
+    try { if (typeof iigTimersOff === 'function') iigTimersOff(); } catch (e0) {}
+  }
+  function iigFail(e, where) {
+    try {
+      var h = document.getElementById('iig-host') || document.body;
+      var d = document.createElement('div');
+      d.style.cssText = 'font:11px/1.4 ui-monospace,monospace;color:#e6a0a0;padding:6px 0;';
+      d.textContent = L('IIG сбой (') + where + '): ' + (e && e.message ? e.message : e);
+      h.appendChild(d);
+      var fe = window.frameElement;
+      if (fe) {
+        fe.style.height = (document.body.scrollHeight || 40) + 'px';
+        fe.style.display = 'block';
+      }
+    } catch (x) {}
+
+    try {
+      var rec = {
+        at: Date.now(),
+        w: String(where || ''),
+        t: String((e && e.message) ? e.message : e).slice(0, 200),
+        s: String((e && e.stack) || '').slice(0, 500)
+      };
+      Promise.resolve(tavo.get('iig_flog', 'global')).then(function (a) {
+        if (!Array.isArray(a)) a = [];
+        a.push(rec);
+        if (a.length > 20) a = a.slice(a.length - 20);
+        return tavo.set('iig_flog', a, 'global');
+      }, function () {}).then(function () {}, function () {});
+    } catch (x) {}
+    try {
+      tavo.utils.toast(L('IIG сбой (') + where + '): ' + (e && e.message ? e.message : e));
+    } catch (x) {}
+  }
+
+  iigListen(window, 'error', function (ev) {
+    if (iigGone()) return iigTeardown();
+    iigFail(ev.error || ev.message, L('скрипт'));
+  });
+  iigListen(window, 'unhandledrejection', function (ev) {
+    if (iigGone()) return iigTeardown();
+    iigFail(ev.reason, L('обещание'));
+  });
+
+  (function hardenTavo() {
+    function wrapFn(fn, ctx) {
+      var w = function () {
+        var r;
+        try {
+          r = fn.apply(ctx, arguments);
+        } catch (e) {
+          return Promise.reject(e);
+        }
+        if (!r || typeof r.then !== 'function') return Promise.resolve(r);
+        return new Promise(function (res, rej) {
+          var done = false;
+          try {
+            r.then(function (v) {
+              if (done) return;
+              done = true;
+
+              if (v && typeof v.then === 'function') v = undefined;
+              res(v);
+            }, function (e) {
+              if (done) return;
+              done = true;
+              rej(e);
+            });
+          } catch (e) {
+            if (!done) {
+              done = true;
+              rej(e);
+            }
+          }
+        });
+      };
+      w.__iigHard = 1;
+      return w;
+    }
+    try {
+      var spec = {
+        '': ['get', 'set', 'unset', 'generate'],
+        'message': ['current', 'get', 'find', 'count', 'update'],
+        'file': ['load', 'save', 'exists', 'delete', 'list'],
+        'chat': ['current']
+      };
+      for (var ns in spec) {
+        var obj = ns ? tavo[ns] : tavo;
+        if (!obj) continue;
+        for (var i = 0; i < spec[ns].length; i++) {
+          var name = spec[ns][i];
+          if (typeof obj[name] === 'function' && !obj[name].__iigHard) obj[name] = wrapFn(obj[name], obj);
+        }
+      }
+    } catch (e) {}
+  })();
+
+  try {
+
+(function () {
+function _svgIcon() {
+        const NS = 'http://www.w3.org/2000/svg';
+        const mk = function(tag, attrs) {
+          const e = document.createElementNS(NS, tag);
+          for (const k in attrs) e.setAttribute(k, attrs[k]);
+          return e;
+        };
+        const s = mk('svg', {
+          viewBox: '0 0 24 24',
+          width: '24',
+          height: '24',
+          fill: 'none'
+        });
+        s.style.filter = 'drop-shadow(0 1px 4px rgba(0,0,0,.85))';
+        return {
+          s: s,
+          mk: mk,
+          st: {
+            stroke: '#e6e8ec',
+            'stroke-width': '2',
+            'stroke-linecap': 'round',
+            'stroke-linejoin': 'round'
+          }
+        };
+      }
+
+function dlIcon() {
+        const o = _svgIcon();
+        o.s.appendChild(o.mk('path', Object.assign({
+          d: 'M12 4 L12 14'
+        }, o.st)));
+        o.s.appendChild(o.mk('path', Object.assign({
+          d: 'M8 11 L12 15 L16 11'
+        }, o.st)));
+        o.s.appendChild(o.mk('path', Object.assign({
+          d: 'M5 19 L19 19'
+        }, o.st)));
+        return o.s;
+      }
+
+function regenIcon() {
+        const o = _svgIcon();
+        o.s.appendChild(o.mk('polyline', Object.assign({
+          points: '21 4 21 9 16 9'
+        }, o.st)));
+        o.s.appendChild(o.mk('path', Object.assign({
+          d: 'M19 14 A8 8 0 1 1 17.3 6.1 L21 9'
+        }, o.st)));
+        return o.s;
+      }
+
+function editIcon() {
+        const o = _svgIcon();
+        o.s.appendChild(o.mk('path', Object.assign({
+          d: 'M5 19 L8.5 18 L19 7.5 A1.8 1.8 0 0 0 16.5 5 L6 15.5 Z'
+        }, o.st)));
+        o.s.appendChild(o.mk('path', Object.assign({
+          d: 'M14.5 7 L17 9.5'
+        }, o.st)));
+        return o.s;
+      }
+
+function stopIcon() {
+        const o = _svgIcon();
+        const st2 = Object.assign({}, o.st, {
+          'stroke-width': '3'
+        });
+        o.s.appendChild(o.mk('path', Object.assign({
+          d: 'M9 5 L9 19'
+        }, st2)));
+        o.s.appendChild(o.mk('path', Object.assign({
+          d: 'M15 5 L15 19'
+        }, st2)));
+        return o.s;
+      }
+
+function starIcon(on) {
+        const o = _svgIcon();
+        const st = Object.assign({}, o.st);
+        const p = o.mk('path', Object.assign({
+          d: 'M12 3.6 L14.6 9.1 L20.6 9.9 L16.3 14.1 L17.4 20.1 L12 17.2 L6.6 20.1 L7.7 14.1 L3.4 9.9 L9.4 9.1 Z'
+        }, st));
+        if (on) p.setAttribute('fill', '#e6e8ec');
+        o.s.appendChild(p);
+        return o.s;
+      }
+
+function upIcon() {
+        const o = _svgIcon();
+        o.s.appendChild(o.mk('path', Object.assign({
+          d: 'M13.5 4.5 L19.5 4.5 L19.5 10.5'
+        }, o.st)));
+        o.s.appendChild(o.mk('path', Object.assign({
+          d: 'M19.5 4.5 L13 11'
+        }, o.st)));
+        o.s.appendChild(o.mk('path', Object.assign({
+          d: 'M10.5 19.5 L4.5 19.5 L4.5 13.5'
+        }, o.st)));
+        o.s.appendChild(o.mk('path', Object.assign({
+          d: 'M4.5 19.5 L11 13'
+        }, o.st)));
+        return o.s;
+      }
+
+function promptIcon() {
+        const o = _svgIcon();
+        o.s.appendChild(o.mk('path', Object.assign({
+          d: 'M7 3.5 L17 3.5 L17 20.5 L7 20.5 Z'
+        }, o.st)));
+        o.s.appendChild(o.mk('path', Object.assign({
+          d: 'M9.6 8.5 L14.4 8.5'
+        }, o.st)));
+        o.s.appendChild(o.mk('path', Object.assign({
+          d: 'M9.6 12 L14.4 12'
+        }, o.st)));
+        o.s.appendChild(o.mk('path', Object.assign({
+          d: 'M9.6 15.5 L12.6 15.5'
+        }, o.st)));
+        return o.s;
+      }
+
+function imgCss(ratio, gen) {
+        return 'display:block;width:100%;height:100%;object-fit:cover;aspect-ratio:' + (ratio || '1 / 1') + ';' + (gen ? 'background:repeating-linear-gradient(45deg,#1d1f24,#1d1f24 12px,#262a31 12px,#262a31 24px);' : '');
+      }
+
+  function parseMarkers(t) {
+    return { prompt: String(t || '').replace(/\[(?:CAST|AR):[^\]]*\]/gi, '').trim() };
+  }
+
+function kbLift(TD, ov) {
+  var W = TD.defaultView || window;
+  var t = null;
+  var apply = function () {
+    t = null;
+    if (!ov.isConnected) {
+      off();
+      return;
+    }
+    var occ = 0;
+    try {
+      var wv = (W.tav && W.tav.config && W.tav.config.webViewport) || {};
+      var l = W.innerHeight;
+      var c = Math.max(0, Number(wv.keyboardInset) || 0);
+      if (c > 0) c += Math.max(0, Number(wv.nativeShortcutHeight) || 0);
+      var d = Math.max(0, (Number(wv.hostViewportHeight) || l) - l);
+      var vv = W.visualViewport;
+      occ = Math.round(Math.max(0, c - d, vv ? (l - vv.height) : 0));
+    } catch (e) {}
+    ov.style.paddingBottom = (14 + occ) + 'px';
+  };
+  var later = function () {
+    if (t) return;
+    t = setTimeout(apply, 90);
+  };
+  var off = function () {
+    try {
+      W.removeEventListener('configChanged', later);
+      if (W.visualViewport) W.visualViewport.removeEventListener('resize', later);
+    } catch (e) {}
+  };
+  try {
+    W.addEventListener('configChanged', later);
+    if (W.visualViewport) W.visualViewport.addEventListener('resize', later);
+  } catch (e) {}
+  ov.addEventListener('focusin', later);
+}
+
+async function sideGet(name, legacyKey) {
+  var suf = name === 'iig_p' ? '_p' : '_r';
+  try {
+    const v1 = await tavo.get('iig_m' + msgId + suf, 'chat');
+    if (v1) return String(v1);
+  } catch (e) {}
+  try {
+    const v = await tavo.get(name, { scope: 'message', id: msgId });
+    if (v) return String(v);
+  } catch (e) {}
+  if (legacyKey) {
+    try {
+      const v2 = await tavo.get(legacyKey, 'chat');
+      if (v2) return String(v2);
+    } catch (e) {}
+  }
+  return '';
+}
+
+async function showPrompt(img, tag) {
+        const key = img._iigKey || img.getAttribute('data-iig-key') || '';
+        let p = await sideGet('iig_p', key ? (key + '_p') : '');
+        if (!p && tag && tag.prompt) p = String(tag.prompt);
+        p = parseMarkers(p).prompt;
+        let light = false;
+        try {
+          light = (await tavo.get('iig_theme', 'global')) === 'light';
+        } catch (e) {}
+        let TD = document;
+        try {
+          const od = window.frameElement && window.frameElement.ownerDocument;
+          if (od && od.body) TD = od;
+        } catch (e) {}
+        const old = TD.getElementById('iig-prompt-modal');
+        if (old) old.remove();
+        const C = light ? {
+          mask: 'rgba(10,12,15,.72)',
+          card: '#f2f4f7',
+          bord: 'rgba(88,98,115,.35)',
+          text: '#20242a',
+          lbl: '#586273',
+          inBg: '#ffffff',
+          inBord: 'rgba(88,98,115,.35)',
+          btnBg: 'rgba(88,98,115,.08)',
+          btnTx: '#20242a',
+          btn3: '#586273',
+          btn3b: 'rgba(88,98,115,.42)',
+          shadow: 'none'
+        } : {
+          mask: 'rgba(10,12,15,.72)',
+          card: '#1f2227',
+          bord: 'rgba(154,163,173,.3)',
+          text: '#e6e8ec',
+          lbl: '#9aa3ad',
+          inBg: 'rgba(0,0,0,.25)',
+          inBord: 'rgba(154,163,173,.35)',
+          btnBg: 'rgba(255,255,255,.05)',
+          btnTx: '#e6e8ec',
+          btn3: '#9aa3ad',
+          btn3b: 'rgba(154,163,173,.4)',
+          shadow: 'none'
+        };
+        const F = 'Courier Prime,monospace';
+        const ov = TD.createElement('div');
+        ov.id = 'iig-prompt-modal';
+        ov.style.cssText = 'position:' + (TD === document ? 'fixed' : 'absolute') + ';inset:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;background:' + C.mask + ';padding:14px;box-sizing:border-box;';
+        const card = TD.createElement('div');
+        card.style.cssText = 'max-width:360px;width:100%;max-height:100%;overflow:auto;display:flex;flex-direction:column;padding:18px 16px 14px;border-radius:16px;background:' + C.card + ';border:1px solid ' + C.bord + ';box-shadow:' + C.shadow + ';box-sizing:border-box;font-family:' + F + ';';
+        const title = TD.createElement('div');
+        title.textContent = L('Промпт');
+        title.style.cssText = 'font:700 13px ' + F + ';letter-spacing:.42em;text-transform:uppercase;text-align:center;color:' + C.text + ';margin:0 0 4px .42em;';
+        const lbl = TD.createElement('div');
+        lbl.textContent = key ? (L('картинка · ') + key.replace(/^iig_/, '')) : L('картинка');
+        lbl.style.cssText = 'font:700 8px ' + F + ';letter-spacing:.22em;text-transform:uppercase;text-align:center;color:' + C.lbl + ';margin:0 0 4px;';
+        const rline = TD.createElement('div');
+        rline.textContent = '';
+        rline.style.cssText = 'font:10px/1.5 ' + F + ';text-align:center;color:' + C.lbl + ';margin:0 0 10px;word-break:break-word;white-space:pre-line;';
+        (async function() {
+          try {
+            const rn = await sideGet('iig_r', key ? (key + '_r') : '');
+
+            rline.textContent = String(rn || L('референсы: данные появятся после генерации (или картинка из старой версии)'))
+              .replace(L(' · не уехало:'), L('\nне уехало:'));
+          } catch (e) {}
+        })();
+        const ta = TD.createElement('textarea');
+        ta.value = p || '';
+        ta.placeholder = L('промпт не сохранён (картинка из старой версии или ещё не создана) — тапни переписать или впиши свой');
+        ta.style.cssText = 'width:100%;min-height:120px;flex:1 0 auto;resize:none;padding:12px;border-radius:12px;border:1px solid ' + C.inBord + ';background:' + C.inBg + ';color:' + C.text + ';font:11px/1.6 ' + F + ';box-sizing:border-box;white-space:pre-wrap;overflow:auto;outline:none;-webkit-tap-highlight-color:transparent;';
+        const row = TD.createElement('div');
+        row.style.cssText = 'display:flex;gap:8px;margin-top:14px;';
+        const row2 = TD.createElement('div');
+        row2.style.cssText = 'display:flex;gap:8px;margin-top:8px;';
+        const mkMain = function(txt) {
+          const b = TD.createElement('button');
+          b.textContent = txt;
+          b.style.cssText = 'flex:1;padding:11px 8px;border:1px solid ' + C.btn3b + ';border-radius:10px;background:' + C.btnBg + ';color:' + C.btnTx + ';font:700 9px ' + F + ';letter-spacing:.14em;text-transform:uppercase;cursor:pointer;-webkit-tap-highlight-color:transparent;outline:none;';
+          return b;
+        };
+        const mkGhost = function(txt) {
+          const b = TD.createElement('button');
+          b.textContent = txt;
+          b.style.cssText = 'flex:1;padding:11px 8px;border:1px solid ' + C.btn3b + ';border-radius:10px;background:transparent;color:' + C.btn3 + ';font:9px ' + F + ';letter-spacing:.14em;text-transform:uppercase;cursor:pointer;-webkit-tap-highlight-color:transparent;outline:none;';
+          return b;
+        };
+        const bCopy = mkGhost(L('копировать'));
+        const bRw = mkGhost(L('переписать'));
+        const bX = mkGhost(L('закрыть'));
+        bRw.title = L('заново написать промпт (картинка не трогается)');
+        bCopy.onclick = async function() {
+          const ok = await copyText(ta.value || '');
+          try {
+            tavo.utils.toast(ok ? L('промпт скопирован') : L('не вышло — выдели и скопируй вручную'));
+          } catch (e) {}
+          if (!ok) {
+            try {
+              ta.focus();
+              ta.select();
+            } catch (e) {}
+          }
+        };
+        const bSave = mkMain(L('сохранить'));
+        const bDraw = mkGhost(L('нарисовать'));
+        bSave.title = L('сохранить текст как промпт этой картинки');
+        bDraw.title = L('сохранить текст и перерисовать картинку по нему');
+        bSave.onclick = async function() {
+          const text = (ta.value || '').trim();
+          if (!text) {
+            try { tavo.utils.toast(L('промпт пуст — нечего сохранять')); } catch (e) {}
+            return;
+          }
+          if ((await sendCmd('setprompt', { text: text })) === false) return;
+          p = text;
+          try { tavo.utils.toast(L('промпт сохранён — ↻ на картинке нарисует по нему')); } catch (e) {}
+        };
+        bDraw.onclick = async function() {
+          const text = (ta.value || '').trim();
+          if (!text) {
+            try { tavo.utils.toast(L('промпт пуст — рисовать не по чему')); } catch (e) {}
+            return;
+          }
+          ov.remove();
+          await sendCmd('regen', { prompt: text });
+        };
+        bRw.onclick = async function() {
+          if (bRw._busy) return;
+          bRw._busy = 1;
+          const was = bRw.textContent;
+          bRw.textContent = L('запись…');
+          try {
+
+            let base0 = '';
+            try {
+              base0 = await sideGet('iig_p', key ? (key + '_p') : '');
+            } catch (e) {}
+            await sendCmd('rewrite');
+            let done = false;
+            for (let i = 0; i < 60; i++) {
+              await new Promise(function (r) { setTimeout(r, 1000); });
+              let np = '';
+              try {
+                np = await sideGet('iig_p', key ? (key + '_p') : '');
+              } catch (e) {}
+              if (np && np !== base0) {
+                p = parseMarkers(np).prompt;
+                ta.value = p;
+                done = true;
+                break;
+              }
+            }
+            try {
+              tavo.utils.toast(done
+                ? L('промпт переписан — тапни ↻ на картинке, чтобы перегенерировать по нему')
+                : L('промпт ещё пишется — загляни сюда через минуту'));
+            } catch (x) {}
+          } catch (e) {
+            try { tavo.utils.toast(L('переписать не вышло')); } catch (x) {}
+          }
+          bRw.textContent = was;
+          bRw._busy = 0;
+        };
+        bX.onclick = function() {
+          ov.remove();
+        };
+        ov.addEventListener('click', function(e) {
+          if (e.target === ov) ov.remove();
+        });
+        row.appendChild(bSave);
+        row.appendChild(bDraw);
+        row2.appendChild(bCopy);
+        row2.appendChild(bRw);
+        row2.appendChild(bX);
+        card.appendChild(title);
+        card.appendChild(lbl);
+        card.appendChild(rline);
+        card.appendChild(ta);
+        card.appendChild(row);
+        card.appendChild(row2);
+        ov.appendChild(card);
+        (TD.body || TD.documentElement).appendChild(ov);
+        kbLift(TD, ov);
+      }
+
+async function showEdit(img, tag) {
+        const key = img._iigKey || img.getAttribute('data-iig-key') || '';
+        if (msgId == null) return toast(L('IIG: фрагмент не знает своего поста — перезайди в чат'));
+        let light = false;
+        try {
+          light = (await tavo.get('iig_theme', 'global')) === 'light';
+        } catch (e) {}
+        let TD = document;
+        try {
+          const od = window.frameElement && window.frameElement.ownerDocument;
+          if (od && od.body) TD = od;
+        } catch (e) {}
+        const old = TD.getElementById('iig-edit-modal');
+        if (old) old.remove();
+        const C = light ? {
+          mask: 'rgba(10,12,15,.72)',
+          card: '#f2f4f7',
+          bord: 'rgba(88,98,115,.35)',
+          text: '#20242a',
+          lbl: '#586273',
+          inBg: '#ffffff',
+          inBord: 'rgba(88,98,115,.35)',
+          btnBg: 'rgba(88,98,115,.08)',
+          btnTx: '#20242a',
+          btn3: '#586273',
+          btn3b: 'rgba(88,98,115,.42)',
+          shadow: 'none'
+        } : {
+          mask: 'rgba(10,12,15,.72)',
+          card: '#1f2227',
+          bord: 'rgba(154,163,173,.3)',
+          text: '#e6e8ec',
+          lbl: '#9aa3ad',
+          inBg: 'rgba(0,0,0,.25)',
+          inBord: 'rgba(154,163,173,.35)',
+          btnBg: 'rgba(255,255,255,.05)',
+          btnTx: '#e6e8ec',
+          btn3: '#9aa3ad',
+          btn3b: 'rgba(154,163,173,.4)',
+          shadow: 'none'
+        };
+        const F = 'Courier Prime,monospace';
+        const ov = TD.createElement('div');
+        ov.id = 'iig-edit-modal';
+        ov.style.cssText = 'position:' + (TD === document ? 'fixed' : 'absolute') + ';inset:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;background:' + C.mask + ';padding:14px;box-sizing:border-box;';
+        const card = TD.createElement('div');
+        card.style.cssText = 'max-width:360px;width:100%;max-height:100%;overflow:auto;display:flex;flex-direction:column;padding:18px 16px 14px;border-radius:16px;background:' + C.card + ';border:1px solid ' + C.bord + ';box-shadow:' + C.shadow + ';box-sizing:border-box;font-family:' + F + ';';
+        const title = TD.createElement('div');
+        title.textContent = L('Доработка');
+        title.style.cssText = 'font:700 13px ' + F + ';letter-spacing:.42em;text-transform:uppercase;text-align:center;color:' + C.text + ';margin:0 0 4px .42em;';
+        const lbl = TD.createElement('div');
+        lbl.textContent = L('картинка · ') + key.replace(/^iig_/, '');
+        lbl.style.cssText = 'font:700 8px ' + F + ';letter-spacing:.22em;text-transform:uppercase;text-align:center;color:' + C.lbl + ';margin:0 0 14px;';
+        const ta = TD.createElement('textarea');
+        ta.placeholder = L('что исправить: например, перерисуй левую руку, пальцев должно быть пять');
+        ta.style.cssText = 'width:100%;min-height:74px;resize:none;padding:12px;border-radius:12px;border:1px solid ' + C.inBord + ';background:' + C.inBg + ';color:' + C.text + ';font:12px/1.6 ' + F + ';box-sizing:border-box;outline:none;-webkit-tap-highlight-color:transparent;';
+        const row = TD.createElement('div');
+        row.style.cssText = 'display:flex;gap:8px;margin-top:14px;';
+        const mkB = function(txt, main) {
+          const b = TD.createElement('button');
+          b.textContent = txt;
+          b.style.cssText = 'flex:1;padding:11px 8px;border:1px solid ' + C.btn3b + ';border-radius:10px;background:' + (main ? C.btnBg : 'transparent') + ';color:' + (main ? C.btnTx : C.btn3) + ';font:' + (main ? '700 ' : '') + '9px ' + F + ';letter-spacing:.14em;text-transform:uppercase;cursor:pointer;-webkit-tap-highlight-color:transparent;outline:none;';
+          return b;
+        };
+        const bGo = mkB(L('доработать'), true);
+        const bUndo = mkB(L('вернуть'), false);
+        const bX = mkB(L('закрыть'), false);
+
+        const pic = TD.createElement('div');
+        const ratio = (img && img.naturalWidth && img.naturalHeight) ? (img.naturalWidth / img.naturalHeight) : 1;
+        let maxH = 260;
+        try {
+          maxH = Math.round(((TD.defaultView || window).innerHeight || 620) * 0.4);
+        } catch (e) {}
+        pic.style.cssText = 'position:relative;flex:0 0 auto;align-self:center;width:' + Math.max(120, Math.min(380, Math.round(maxH * ratio))) + 'px;max-width:100%;margin:0 0 8px;border-radius:12px;overflow:hidden;line-height:0;touch-action:none;border:1px solid ' + C.inBord + ';';
+        const pim = TD.createElement('img');
+        pim.alt = '';
+        pim.src = (img && (img.currentSrc || img.src)) || '';
+        pim.style.cssText = 'display:block;width:100%;height:auto;pointer-events:none;';
+        const cv = TD.createElement('canvas');
+        cv.id = 'iig-edit-mark';
+        cv.style.cssText = 'position:absolute;left:0;top:0;width:100%;height:100%;touch-action:none;cursor:crosshair;';
+        pic.appendChild(pim);
+        pic.appendChild(cv);
+        const hint = TD.createElement('div');
+        hint.style.cssText = 'font:10px/1.5 ' + F + ';color:' + C.lbl + ';text-align:center;margin:0 0 10px;';
+        const strokes = [];
+        let stroke = null;
+        const hintPaint = function() {
+          hint.textContent = strokes.length ? L('место отмечено — правка только в нём · тап сюда, чтобы стереть обводку') : L('обведи пальцем место, которое надо исправить — или не обводи, тогда правка на всю картинку');
+        };
+        const redraw = function() {
+          const g = cv.getContext('2d');
+          if (!g) return;
+          g.clearRect(0, 0, cv.width, cv.height);
+          g.strokeStyle = '#ff3b3b';
+          g.lineWidth = 3;
+          g.lineJoin = 'round';
+          g.lineCap = 'round';
+          for (const st of strokes) {
+            g.beginPath();
+            for (let i = 0; i < st.length; i++) {
+              if (i) g.lineTo(st[i][0] * cv.width, st[i][1] * cv.height);
+              else g.moveTo(st[i][0] * cv.width, st[i][1] * cv.height);
+            }
+            g.stroke();
+          }
+        };
+        const ptOf = function(e) {
+          const r = cv.getBoundingClientRect();
+          return [Math.min(1, Math.max(0, (e.clientX - r.left) / (r.width || 1))), Math.min(1, Math.max(0, (e.clientY - r.top) / (r.height || 1)))];
+        };
+        cv.addEventListener('pointerdown', function(e) {
+          e.preventDefault();
+          if (cv.clientWidth && cv.width !== cv.clientWidth) {
+            cv.width = cv.clientWidth;
+            cv.height = cv.clientHeight;
+          }
+          stroke = [ptOf(e)];
+          strokes.push(stroke);
+          try {
+            cv.setPointerCapture(e.pointerId);
+          } catch (x) {}
+        });
+        cv.addEventListener('pointermove', function(e) {
+          if (!stroke) return;
+          stroke.push(ptOf(e));
+          redraw();
+        });
+        const strokeEnd = function() {
+          if (stroke && stroke.length < 2) strokes.pop();
+          stroke = null;
+          hintPaint();
+        };
+        cv.addEventListener('pointerup', strokeEnd);
+        cv.addEventListener('pointercancel', strokeEnd);
+        hint.addEventListener('click', function() {
+          strokes.length = 0;
+          redraw();
+          hintPaint();
+        });
+        hintPaint();
+        const packMark = function() {
+          return strokes.slice(-6).map(function(st) {
+            const step = Math.max(1, Math.ceil(st.length / 80));
+            const out = [];
+            for (let i = 0; i < st.length; i += step) out.push([Math.round(st[i][0] * 1000) / 1000, Math.round(st[i][1] * 1000) / 1000]);
+            return out;
+          });
+        };
+        const lbl2 = TD.createElement('div');
+        lbl2.textContent = L('другое');
+        lbl2.style.cssText = 'font:700 8px ' + F + ';letter-spacing:.22em;text-transform:uppercase;text-align:center;color:' + C.lbl + ';margin:16px 0 8px;';
+        const sel = TD.createElement('select');
+        sel.id = 'iig-edit-style';
+        sel.style.cssText = 'width:100%;padding:11px 12px;border-radius:12px;border:1px solid ' + C.inBord + ';background:' + C.inBg + ';color:' + C.text + ';font:12px ' + F + ';box-sizing:border-box;';
+        const opt0 = TD.createElement('option');
+        opt0.value = '';
+        opt0.textContent = L('перерисовать в стиле: выбери');
+        sel.appendChild(opt0);
+        try {
+          const plist = (await tavo.get('iig_prompts', 'global')) || [];
+          for (const p of (Array.isArray(plist) ? plist : [])) {
+            if (!p || !p.name) continue;
+            const o = TD.createElement('option');
+            o.value = String(p.name);
+            o.textContent = String(p.name).split(' by ')[0];
+            sel.appendChild(o);
+          }
+        } catch (e) {}
+        const row2 = TD.createElement('div');
+        row2.style.cssText = 'display:flex;gap:8px;margin-top:8px;';
+        const bStyle = mkB(L('перерисовать'), false);
+        const bBoard = mkB(L('в доски'), false);
+        bStyle.onclick = async function() {
+          if (!sel.value) {
+            try { tavo.utils.toast(L('IIG: выбери стиль в списке')); } catch (e) {}
+            return;
+          }
+          await sendCmd('restyle', { style: sel.value });
+          ov.remove();
+        };
+        bBoard.onclick = async function() {
+          await sendCmd('toboard');
+          ov.remove();
+        };
+        row2.appendChild(bStyle);
+        row2.appendChild(bBoard);
+        if (!(tag && tag.edited)) bUndo.style.opacity = '.4';
+        bGo.onclick = async function() {
+          if (bGo._busy) return;
+          const instr = (ta.value || '').trim();
+          if (instr.length < 3) {
+            try { tavo.utils.toast(L('IIG: опиши, что исправить')); } catch (e) {}
+            return;
+          }
+          bGo._busy = 1;
+          bGo.textContent = L('дорабатываю…');
+          await sendCmd('edit', { text: instr, mark: packMark() });
+          ov.remove();
+        };
+        bUndo.onclick = async function() {
+          await sendCmd('undo');
+          ov.remove();
+        };
+        bX.onclick = function() {
+          ov.remove();
+        };
+        ov.addEventListener('click', function(e) {
+          if (e.target === ov) ov.remove();
+        });
+        row.appendChild(bGo);
+        row.appendChild(bUndo);
+        row.appendChild(bX);
+        card.appendChild(title);
+        card.appendChild(lbl);
+        card.appendChild(pic);
+        card.appendChild(hint);
+        card.appendChild(ta);
+        card.appendChild(row);
+        card.appendChild(lbl2);
+        card.appendChild(sel);
+        card.appendChild(row2);
+        ov.appendChild(card);
+        (TD.body || TD.documentElement).appendChild(ov);
+        kbLift(TD, ov);
+      }
+
+async function copyText(t) {
+        let ok = false;
+        try {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(t);
+            ok = true;
+          }
+        } catch (e) {}
+        if (!ok) {
+          try {
+            const ta = document.createElement('textarea');
+            ta.value = t;
+            ta.style.cssText = 'position:fixed;left:-9999px;top:0;';
+            document.body.appendChild(ta);
+            ta.focus();
+            ta.select();
+            ok = document.execCommand('copy');
+            ta.remove();
+          } catch (e) {}
+        }
+        return ok;
+      }
+
+  function toast(t) {
+    try {
+      tavo.utils.toast(t);
+    } catch (e) {}
+  }
+
+  var wrapEl = null;
+  var imgEl = null;
+  var msg = null;
+  var msgId = 0;
+  var lastState = null;
+  var cfgAr = '1:1';
+  var frameName = '';
+  var skipNote = false;
+
+  var autoOn = null;
+
+  function ownFrame() {
+    try {
+      return window.frameElement || null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function host() {
+    return hostEl || document.getElementById('iig-host');
+  }
+
+  var fitT = null;
+  var fitBoot = false;
+  var fitLog = [];
+  var fitN = 0;
+  var guardT = null;
+  var guardLeft = 0;
+
+  function fitNote(h0, h1, why) {
+    fitN++;
+    fitLog.push({ t: Date.now(), h0: h0, h1: h1, why: String(why || '') });
+    while (fitLog.length > 24) fitLog.shift();
+    try {
+      if (hostEl) {
+        hostEl.iigFitLog = fitLog;
+        hostEl.iigFitN = fitN;
+      }
+    } catch (e0) {}
+  }
+
+  function bubbleOf() {
+    var el = ownFrame() || hostEl;
+    var n = 0;
+    try {
+      el = el ? el.parentElement : null;
+      while (el && n < 16) {
+        if (el.classList && el.classList.contains('tav-bubble')) return el;
+        el = el.parentElement;
+        n++;
+      }
+    } catch (e0) {}
+    return null;
+  }
+
+  function bubbleGuard() {
+    guardT = null;
+    if (iigGone()) return false;
+    var b = bubbleOf();
+    if (!b) return false;
+    var stuck = b.classList.contains('tav-bubble-regeneration-morph') || b.classList.contains('tav-bubble-appear');
+    if (!stuck) return false;
+    var anims = null;
+    try {
+      if (typeof b.getAnimations === 'function') anims = b.getAnimations();
+    } catch (e0) {
+      anims = null;
+    }
+    if (!anims) return false;
+    if (anims.length) {
+      if (guardLeft > 0) {
+        guardLeft--;
+        guardT = setTimeout(bubbleGuard, 700);
+      }
+      return false;
+    }
+    b.classList.remove('tav-bubble-regeneration-morph');
+    b.classList.remove('tav-bubble-appear');
+    var vars = ['--regeneration-from-width', '--regeneration-from-height', '--regeneration-to-width', '--regeneration-to-height', '--appear-to-height'];
+    for (var i = 0; i < vars.length; i++) {
+      try { b.style.removeProperty(vars[i]); } catch (e1) {}
+    }
+    var fe = ownFrame();
+    var cur = fe ? (fe.clientHeight || 0) : 0;
+    fitNote(cur, cur, 'guard');
+    fit('guard');
+    return true;
+  }
+
+  function guardSoon() {
+    try { clearTimeout(guardT); } catch (e0) {}
+    guardLeft = 2;
+    guardT = setTimeout(bubbleGuard, 700);
+  }
+
+  try {
+    window.iigFitLog = fitLog;
+    window.iigBubbleGuard = bubbleGuard;
+    window.fitLog = fitLog;
+    window.bubbleGuard = bubbleGuard;
+    document.iigFitLog = fitLog;
+    if (hostEl) {
+      hostEl.iigFitLog = fitLog;
+      hostEl.iigFitN = fitN;
+    }
+  } catch (e0) {}
+
+  function fit(why) {
+    if (iigGone()) return;
+    var fe = ownFrame();
+    if (!fe) return;
+    var h = 0;
+    var empty = !host() || !host().firstChild;
+    try {
+      var hb = host();
+      var mb = 2;
+      var wr = hb ? hb.querySelector('.iig-wrap') : null;
+      if (wr) {
+        var mv = parseFloat(window.getComputedStyle(wr).marginBottom);
+        mb = isFinite(mv) ? mv : 2;
+      }
+      h = hb ? Math.ceil(hb.getBoundingClientRect().bottom + mb) : 0;
+      if (!(h > mb)) h = 0;
+    } catch (e) {
+      h = 0;
+    }
+    if (!h && !empty) {
+      try {
+        h = document.documentElement ? document.documentElement.scrollHeight || 0 : 0;
+      } catch (e) {}
+    }
+    try {
+      if (!fitBoot) {
+        fitBoot = true;
+        fe.style.minHeight = '0px';
+        fe.style.border = '0';
+        fe.style.display = 'block';
+      }
+      var cur = fe.clientHeight || 0;
+      if (Math.abs(cur - h) > 1) {
+        fe.style.height = h + 'px';
+        if (why !== 'guard') {
+          fitNote(cur, h, why || 'fit');
+          guardSoon();
+        }
+      }
+      if (!h && !empty) {
+        clearTimeout(fitT);
+        fitT = setTimeout(fit, 250);
+      }
+    } catch (e) {}
+    try {
+      if (ownFrame()) {
+        document.documentElement.style.height = h ? 'auto' : '0px';
+        document.documentElement.style.overflow = 'hidden';
+      }
+    } catch (e) {}
+  }
+
+  var fitRaf = 0;
+  var fitRo = null;
+  var fitWhy = '';
+  function fitSoon(why) {
+    if (why && !fitWhy) fitWhy = why;
+    if (iigGone()) {
+      try { if (fitRo) fitRo.disconnect(); } catch (e0) {}
+      fitRo = null;
+      return iigTeardown();
+    }
+    if (fitRaf) return;
+    var run = function () {
+      fitRaf = 0;
+      var w = fitWhy || 'soon';
+      fitWhy = '';
+      fit(w);
+    };
+    try {
+      fitRaf = window.requestAnimationFrame(run) || 1;
+    } catch (e) {
+      fitRaf = 1;
+      setTimeout(run, 16);
+    }
+  }
+  try {
+    var roHost = host();
+    if (roHost && typeof ResizeObserver === 'function') {
+      fitRo = new ResizeObserver(function () { fitSoon('ro'); });
+      fitRo.observe(roHost);
+    }
+  } catch (e) {
+    fitRo = null;
+  }
+  iigListen(window, 'resize', function () { fitSoon('resize'); });
+
+  function errMask(s) {
+    var h = L('[скрыто]');
+    return String(s == null ? '' : s)
+      .replace(/([?&#;]\s*(?:key|token|api_key|apikey|access_token|auth)\s*=\s*)[^&#\s"'<>]*/gi, '$1' + h)
+      .replace(/\bsk-[A-Za-z0-9_-]{8,}/g, h)
+      .replace(/\bpst-[A-Za-z0-9_-]{8,}/g, h)
+      .replace(/AIza[0-9A-Za-z_-]{20,}/g, h);
+  }
+
+  function fragLsMark() {
+    try {
+      var now = Date.now();
+      var t = parseInt(localStorage.getItem('iig_frag_ls'), 10);
+      if (!isFinite(t) || now - t > 3600000 || now < t) localStorage.setItem('iig_frag_ls', String(now));
+    } catch (e) {}
+  }
+  fragLsMark();
+
+  function cmdKeyGet() {
+    try {
+      var t = localStorage.getItem('iig_cmd_key');
+      return (typeof t === 'string' && /^[0-9a-f]{48}$/.test(t)) ? t : '';
+    } catch (e) {
+      return '';
+    }
+  }
+
+  var SHA_K = [0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5, 0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174, 0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da, 0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967, 0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85, 0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070, 0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3, 0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2];
+
+  function utf8Bytes(s) {
+    s = String(s);
+    var out = [];
+    for (var i = 0; i < s.length; i++) {
+      var c = s.charCodeAt(i);
+      if (c >= 0xd800 && c <= 0xdbff && i + 1 < s.length) {
+        var d = s.charCodeAt(i + 1);
+        if (d >= 0xdc00 && d <= 0xdfff) {
+          c = 0x10000 + ((c - 0xd800) << 10) + (d - 0xdc00);
+          i++;
+        } else c = 0xfffd;
+      } else if (c >= 0xd800 && c <= 0xdfff) c = 0xfffd;
+      if (c < 0x80) out.push(c);
+      else if (c < 0x800) out.push(0xc0 | (c >> 6), 0x80 | (c & 63));
+      else if (c < 0x10000) out.push(0xe0 | (c >> 12), 0x80 | ((c >> 6) & 63), 0x80 | (c & 63));
+      else out.push(0xf0 | (c >> 18), 0x80 | ((c >> 12) & 63), 0x80 | ((c >> 6) & 63), 0x80 | (c & 63));
+    }
+    return out;
+  }
+
+  function sha256Bytes(bytes) {
+    var m = bytes.slice();
+    var bl = bytes.length * 8;
+    m.push(0x80);
+    while (m.length % 64 !== 56) m.push(0);
+    var hi = Math.floor(bl / 0x100000000), lo = bl >>> 0;
+    m.push((hi >>> 24) & 255, (hi >>> 16) & 255, (hi >>> 8) & 255, hi & 255, (lo >>> 24) & 255, (lo >>> 16) & 255, (lo >>> 8) & 255, lo & 255);
+    var h = [0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19];
+    var w = new Array(64);
+    var ror = function(x, n) {
+      return (x >>> n) | (x << (32 - n));
+    };
+    for (var p = 0; p < m.length; p += 64) {
+      for (var t = 0; t < 16; t++) w[t] = (m[p + 4 * t] << 24) | (m[p + 4 * t + 1] << 16) | (m[p + 4 * t + 2] << 8) | m[p + 4 * t + 3];
+      for (t = 16; t < 64; t++) {
+        var s0 = ror(w[t - 15], 7) ^ ror(w[t - 15], 18) ^ (w[t - 15] >>> 3);
+        var s1 = ror(w[t - 2], 17) ^ ror(w[t - 2], 19) ^ (w[t - 2] >>> 10);
+        w[t] = (w[t - 16] + s0 + w[t - 7] + s1) | 0;
+      }
+      var a = h[0], b = h[1], c = h[2], d = h[3], e = h[4], f = h[5], g = h[6], k = h[7];
+      for (t = 0; t < 64; t++) {
+        var t1 = (k + (ror(e, 6) ^ ror(e, 11) ^ ror(e, 25)) + ((e & f) ^ (~e & g)) + SHA_K[t] + w[t]) | 0;
+        var t2 = ((ror(a, 2) ^ ror(a, 13) ^ ror(a, 22)) + ((a & b) ^ (a & c) ^ (b & c))) | 0;
+        k = g;
+        g = f;
+        f = e;
+        e = (d + t1) | 0;
+        d = c;
+        c = b;
+        b = a;
+        a = (t1 + t2) | 0;
+      }
+      h[0] = (h[0] + a) | 0;
+      h[1] = (h[1] + b) | 0;
+      h[2] = (h[2] + c) | 0;
+      h[3] = (h[3] + d) | 0;
+      h[4] = (h[4] + e) | 0;
+      h[5] = (h[5] + f) | 0;
+      h[6] = (h[6] + g) | 0;
+      h[7] = (h[7] + k) | 0;
+    }
+    var out = [];
+    for (var q = 0; q < 8; q++) out.push((h[q] >>> 24) & 255, (h[q] >>> 16) & 255, (h[q] >>> 8) & 255, h[q] & 255);
+    return out;
+  }
+
+  function hmacHex(key, msg) {
+    var kb = utf8Bytes(key);
+    if (kb.length > 64) kb = sha256Bytes(kb);
+    while (kb.length < 64) kb.push(0);
+    var ip = [], op = [];
+    for (var i = 0; i < 64; i++) {
+      ip.push(kb[i] ^ 0x36);
+      op.push(kb[i] ^ 0x5c);
+    }
+    var inner = sha256Bytes(ip.concat(utf8Bytes(msg)));
+    var r = sha256Bytes(op.concat(inner));
+    var s = '';
+    for (var j = 0; j < r.length; j++) s += (r[j] < 16 ? '0' : '') + r[j].toString(16);
+    return s;
+  }
+
+  function cmdCanon(v, top) {
+    if (v === null || v === undefined) return 'null';
+    if (Array.isArray(v)) {
+      var a = [];
+      for (var i = 0; i < v.length; i++) a.push(cmdCanon(v[i], false));
+      return '[' + a.join(',') + ']';
+    }
+    if (typeof v === 'object') {
+      var ks = Object.keys(v).sort();
+      var b = [];
+      for (var j = 0; j < ks.length; j++) {
+        if (v[ks[j]] === undefined || typeof v[ks[j]] === 'function') continue;
+        if (top && ks[j] === 'sig') continue;
+        b.push(JSON.stringify(ks[j]) + ':' + cmdCanon(v[ks[j]], false));
+      }
+      return '{' + b.join(',') + '}';
+    }
+    if (typeof v === 'number' && !isFinite(v)) return 'null';
+    return JSON.stringify(v);
+  }
+
+  var lastFrameCss = null;
+  async function applyFrameCss(light) {
+    var css = null;
+
+    try {
+      css = localStorage.getItem('iig_frame_css');
+    } catch (e) {}
+    if (typeof css !== 'string' || !css) {
+      try {
+        css = await tavo.get('iig_frame_css', 'global');
+      } catch (e) {}
+    }
+
+    if (light && typeof css === 'string' && css === lastFrameCss) return;
+    lastFrameCss = (typeof css === 'string') ? css : lastFrameCss;
+    var cfg = null;
+    if (!light || typeof css !== 'string' || !css) {
+      try {
+        var rawCfg = await tavo.get('iig_cfg', 'global');
+        if (rawCfg && typeof rawCfg === 'object' && !Array.isArray(rawCfg)) cfg = { frame: rawCfg.frame, aspectRatio: rawCfg.aspectRatio, autoOn: rawCfg.autoOn };
+        rawCfg = null;
+      } catch (e) {}
+    }
+    var f = String((cfg && cfg.frame) || frameName || 'soft');
+    if (cfg && cfg.frame) frameName = cfg.frame;
+    if (cfg && cfg.aspectRatio) cfgAr = cfg.aspectRatio;
+    if (cfg) autoOn = !!cfg.autoOn;
+    if (typeof css !== 'string' || !css) {
+      css = (f === 'flat') ? '.iig-wrap{border-radius:0!important}' : '.iig-wrap{border-radius:14px!important}';
+    }
+    var s = document.getElementById('iig-frame-style');
+    if (!s) {
+      s = document.createElement('style');
+      s.id = 'iig-frame-style';
+      (document.head || document.documentElement).appendChild(s);
+    }
+    if (s.textContent !== css) s.textContent = css;
+  }
+
+  function ratioOf(ar) {
+    var m = String(ar || '').match(/^(\d+)\s*:\s*(\d+)$/);
+    if (m) return m[1] + ' / ' + m[2];
+    var c = String(cfgAr || '').match(/^(\d+)\s*:\s*(\d+)$/);
+    return c ? (c[1] + ' / ' + c[2]) : '1 / 1';
+  }
+
+  function fileParts(p) {
+    p = String(p || '');
+    if (p.indexOf('files/global/') === 0) return { name: p.slice(13), scope: 'global' };
+    if (p.indexOf('files/chat/') === 0) return { name: p.slice(11), scope: 'chat' };
+    return null;
+  }
+
+  function srcOf(p) {
+    p = String(p || '');
+    if (!p || p.indexOf('data:') === 0 || p.indexOf('blob:') === 0 || /^https?:/i.test(p)) return p;
+    var f = fileParts(p);
+    try {
+      if (f && tavo.file && tavo.file.url) {
+        var u = tavo.file.url(f.name, f.scope);
+        if (u) return u;
+      }
+    } catch (e) {}
+    return p;
+  }
+
+  var lastObjUrl = null;
+  function asImgSrc(d) {
+    var s = String(d || '');
+    if (s.indexOf('data:') !== 0) s = 'data:image/png;base64,' + s;
+    try {
+      var ci = s.indexOf(',');
+      var mime = ((s.slice(0, ci).match(/data:([^;]+)/) || [])[1]) || 'image/png';
+      var bin = atob(s.slice(ci + 1).replace(/\s+/g, ''));
+      var buf = new Uint8Array(bin.length);
+      for (var bj = 0; bj < bin.length; bj++) buf[bj] = bin.charCodeAt(bj);
+      var u = URL.createObjectURL(new Blob([buf], { type: mime }));
+      if (lastObjUrl) {
+        try { URL.revokeObjectURL(lastObjUrl); } catch (e0) {}
+      }
+      lastObjUrl = u;
+      return u;
+    } catch (e) {
+      return s;
+    }
+  }
+
+  async function srcFallback(img, p, again) {
+    var f = fileParts(p);
+    if (!f) return;
+    var scopes = f.scope === 'chat' ? ['chat', 'global'] : ['global', 'chat'];
+    for (var i = 0; i < scopes.length; i++) {
+      var d = null;
+      try {
+        d = await tavo.file.load(f.name, { encoding: 'dataUrl', scope: scopes[i] });
+      } catch (e) {
+        d = null;
+      }
+      if (!curV || curV.path !== p) return;
+      if (d) {
+        if (img === imgEl) imgShow(p, asImgSrc(d), true);
+        else img.src = asImgSrc(d);
+        return;
+      }
+    }
+    var gone = true;
+    for (var j = 0; j < scopes.length; j++) {
+      var ex = true;
+      try {
+        ex = await tavo.file.exists(f.name, { scope: scopes[j] });
+      } catch (e) {
+        ex = true;
+      }
+      if (!curV || curV.path !== p) return;
+      if (ex !== false) gone = false;
+    }
+    if (!gone) return;
+    if (!again) {
+      await new Promise(function (r) { setTimeout(r, 1500); });
+      if (!curV || curV.path !== p) return;
+      return srcFallback(img, p, true);
+    }
+
+    if (curV && curV.syn) {
+      if (curV.tk) {
+        delete variantCache[curV.tk];
+        vcDrop(curV.tk);
+      }
+      lastState = sigOf(curV);
+      clearAll();
+      return;
+    }
+
+    try {
+      var lg = await tavo.get('iig_img', { scope: 'message', id: msgId });
+      if (!curV || curV.path !== p) return;
+      if (lg != null) {
+        await tavo.set('iig_m' + msgId + '_x', 1, 'chat');
+        if (!curV || curV.path !== p) return;
+      }
+    } catch (e) {}
+    lastState = curV ? sigOf(curV) : null;
+    clearAll();
+  }
+
+  function mkBtn(icon, title, fn, keepOpen) {
+    var b = document.createElement('button');
+    b.title = title;
+    b.style.cssText = 'border:none;background:transparent;padding:2px 4px;cursor:pointer;line-height:0;';
+    b.appendChild(icon);
+    b.onclick = function (e) {
+      if (e) e.stopPropagation();
+
+      if (!keepOpen) hideOv();
+      fn();
+    };
+    return b;
+  }
+
+  function hideOv() {
+    if (!wrapEl) return;
+    var a = wrapEl.querySelectorAll('.iig-ov');
+    for (var i = 0; i < a.length; i++) a[i].style.display = 'none';
+  }
+
+  var btnsWrap = null;
+  var busyEl = null;
+  var curRat = '';
+  var curSrc = '';
+  var curAt = 0;
+  var hasPic = false;
+  var curV = null;
+  var srcSeen = {};
+  var arByPath = {};
+  var preSeq = 0;
+
+  function arMeasured(ar) {
+    var m = String(ar || '').match(/^(\d+):(\d+)$/);
+    return !!m && parseInt(m[1], 10) >= 64 && parseInt(m[2], 10) >= 64;
+  }
+
+  function arPut(p, a) {
+    if (!p || !a) return;
+    delete arByPath[p];
+    arByPath[p] = a;
+    var ks = Object.keys(arByPath);
+    while (ks.length > 60) delete arByPath[ks.shift()];
+  }
+
+  function fitAr() {
+    if (imgEl && wrapEl) {
+      var W = imgEl.naturalWidth || 0;
+      var H = imgEl.naturalHeight || 0;
+      if (W > 0 && H > 0) {
+        var rat = W + ' / ' + H;
+        curRat = rat;
+        wrapEl.style.aspectRatio = rat;
+        imgEl.style.aspectRatio = rat;
+        if (curV) {
+          var a = W + ':' + H;
+          curV.ar = a;
+          arPut(curV.path, a);
+          if (curV.tk && curV.path && String(curV.path).indexOf('iig_rr') < 0) {
+            if (variantCache[curV.tk]) variantCache[curV.tk].ar = a;
+            vcPut(curV.tk, curV.path, a);
+          }
+        }
+      }
+    }
+    fit('fitAr');
+  }
+
+  function seenPut(src, at) {
+    if (!src) return;
+    delete srcSeen[src];
+    srcSeen[src] = at;
+    var ks = Object.keys(srcSeen);
+    while (ks.length > 40) delete srcSeen[ks.shift()];
+  }
+
+  function ensureBox(ar) {
+    var rat = ratioOf(ar);
+    if (wrapEl) {
+      if (rat !== curRat) {
+        curRat = rat;
+        wrapEl.style.aspectRatio = rat;
+        imgEl.style.aspectRatio = rat;
+      }
+      return wrapEl;
+    }
+    var h = host();
+    h.textContent = '';
+    stripSig = '';
+    curRat = rat;
+    wrapEl = document.createElement('div');
+    wrapEl.className = 'iig-wrap';
+    wrapEl.style.cssText = 'position:relative;display:block;width:100%;max-width:512px;margin:10px auto 2px;aspect-ratio:' + rat + ';overflow:hidden;';
+    imgEl = document.createElement('img');
+    imgEl.style.cssText = imgCss(rat, true);
+    wrapEl.appendChild(imgEl);
+    h.appendChild(wrapEl);
+    return wrapEl;
+  }
+
+  function areaOv(cover) {
+    var o = document.createElement('div');
+    o.style.cssText = 'position:absolute;inset:0;padding:inherit;box-sizing:border-box;display:flex;pointer-events:none;';
+    var inner = document.createElement('div');
+
+    inner.style.cssText = 'flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;' +
+      (cover ? 'background:repeating-linear-gradient(45deg,#1d1f24,#1d1f24 12px,#262a31 12px,#262a31 24px);' : '');
+    o.appendChild(inner);
+    o._in = inner;
+    return o;
+  }
+
+  function iconBtn(icon, title, fn) {
+    var b = document.createElement('button');
+    b.title = title;
+    b.style.cssText = 'border:none;background:transparent;padding:10px;cursor:pointer;line-height:0;pointer-events:auto;';
+    b.appendChild(icon);
+    b.onclick = function (e) {
+      if (e) e.stopPropagation();
+      fn();
+    };
+    return b;
+  }
+
+  function inNote(text) {
+    var d = document.createElement('div');
+    d.textContent = text;
+    d.style.cssText = 'max-width:88%;text-align:center;font:400 9px/1.5 Courier Prime,monospace;letter-spacing:.12em;text-transform:uppercase;color:#e6e8ec;text-shadow:0 1px 4px rgba(0,0,0,.85);';
+    return d;
+  }
+
+  function showBusy(ar, text, mode) {
+    ensureBox(ar);
+    if (!busyEl) {
+      busyEl = areaOv(hasPic);
+      wrapEl.appendChild(busyEl);
+    }
+    var inner = busyEl._in;
+    inner.textContent = '';
+    if (mode === 'stop') inner.appendChild(iconBtn(stopIcon(), L('остановить генерацию'), function () { sendCmd('stopall'); }));
+    else if (mode === 'regen') inner.appendChild(iconBtn(regenIcon(), L('перегенерировать'), function () { sendCmd('regen'); }));
+
+    if (text) inner.appendChild(inNote(text));
+    if (btnsWrap) btnsWrap.style.display = 'none';
+    hideOv();
+    fit('busy');
+  }
+
+  function clearBusy() {
+    if (!busyEl) return;
+    busyEl.remove();
+    busyEl = null;
+  }
+
+  function showWish() {
+    var TD = document;
+    try {
+      var od = window.frameElement && window.frameElement.ownerDocument;
+      if (od && od.body) TD = od;
+    } catch (e) {}
+    var old = TD.getElementById('iig-wish-modal');
+    if (old) old.remove();
+    var F = 'Courier Prime,monospace';
+    var ov = TD.createElement('div');
+    ov.id = 'iig-wish-modal';
+    ov.style.cssText = 'position:' + (TD === document ? 'fixed' : 'absolute') + ';inset:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;background:rgba(10,12,15,.72);padding:24px;box-sizing:border-box;';
+    var card = TD.createElement('div');
+    card.style.cssText = 'max-width:360px;width:100%;display:flex;flex-direction:column;padding:18px 16px 14px;border-radius:16px;background:#1f2227;border:1px solid rgba(154,163,173,.3);box-sizing:border-box;font-family:' + F + ';';
+    var title = TD.createElement('div');
+    title.textContent = L('Пожелание');
+    title.style.cssText = 'font:700 13px ' + F + ';letter-spacing:.42em;text-transform:uppercase;text-align:center;color:#e6e8ec;margin:0 0 14px .42em;';
+    var ta = TD.createElement('textarea');
+    ta.id = 'iig-wish-text';
+    ta.placeholder = L('что примерно должно быть на картинке: какой момент поста, кто в кадре, что важно показать');
+    ta.style.cssText = 'width:100%;min-height:96px;resize:none;padding:12px;border-radius:12px;border:1px solid rgba(154,163,173,.35);background:rgba(0,0,0,.25);color:#e6e8ec;font:12px/1.6 ' + F + ';box-sizing:border-box;outline:none;';
+    var row = TD.createElement('div');
+    row.style.cssText = 'display:flex;gap:8px;margin-top:14px;';
+    var mkB = function (txt, main) {
+      var b = TD.createElement('button');
+      b.textContent = txt;
+      b.style.cssText = 'flex:1;padding:11px 8px;border:1px solid rgba(154,163,173,.4);border-radius:10px;background:' + (main ? 'rgba(255,255,255,.05)' : 'transparent') + ';color:' + (main ? '#e6e8ec' : '#9aa3ad') + ';font:700 9px ' + F + ';letter-spacing:.14em;text-transform:uppercase;cursor:pointer;';
+      return b;
+    };
+    var bGo = mkB(L('нарисовать'), true);
+    var bX = mkB(L('закрыть'), false);
+    bGo.onclick = function () {
+      var w = (ta.value || '').trim();
+      ov.remove();
+      skipNote = false;
+      sendCmd('regen', w ? { wish: w } : null);
+    };
+    bX.onclick = function () {
+      ov.remove();
+    };
+    ov.addEventListener('click', function (e) {
+      if (e.target === ov) ov.remove();
+    });
+    row.appendChild(bGo);
+    row.appendChild(bX);
+    card.appendChild(title);
+    card.appendChild(ta);
+    card.appendChild(row);
+    ov.appendChild(card);
+    (TD.body || TD.documentElement).appendChild(ov);
+    try {
+      kbLift(TD, ov);
+    } catch (e) {}
+  }
+
+  var stripSig = '';
+  function showStrip(text, mode) {
+    var h = host();
+    if (!h) return;
+    var sig = String(mode) + '|' + String(text);
+    if (stripSig === sig && h.firstChild) return;
+    h.textContent = '';
+    wrapEl = imgEl = btnsWrap = busyEl = rrEl = rrNum = rrPrev = rrNext = null;
+    hasPic = false;
+    curV = null;
+    curSrc = '';
+    curAt = 0;
+    curRat = '';
+    stripSig = sig;
+    var d = document.createElement('div');
+    d.style.cssText = 'display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:4px;max-width:512px;margin:6px auto 2px;padding:6px 10px;border:1px dashed rgba(154,163,173,.4);border-radius:10px;box-sizing:border-box;';
+    if (mode === 'regen') d.appendChild(iconBtn(regenIcon(), L('перегенерировать'), function () { sendCmd('regen'); }));
+    if (text) {
+      var t = document.createElement('div');
+      t.textContent = text;
+      t.style.cssText = 'text-align:center;font:400 9px/1.5 Courier Prime,monospace;letter-spacing:.1em;text-transform:uppercase;color:#9aa3ad;';
+      d.appendChild(t);
+    }
+    if (mode === 'gen') {
+      var g = document.createElement('button');
+      g.textContent = L('✦ сгенерировать картинку');
+      g.title = L('написать промпт и нарисовать картинку к этому посту');
+      g.style.cssText = 'flex:1 1 0;min-width:0;border:1px solid rgba(154,163,173,.4);border-radius:10px;background:transparent;padding:8px 6px;margin:0;cursor:pointer;font:700 9px/1.4 Courier Prime,monospace;letter-spacing:.08em;text-transform:uppercase;color:#9aa3ad;pointer-events:auto;';
+      var brow = document.createElement('div');
+      brow.style.cssText = 'display:flex;flex-wrap:nowrap;gap:6px;width:100%;margin-top:4px;';
+      g.onclick = function (e) {
+        if (e) e.stopPropagation();
+        skipNote = false;
+        sendCmd('regen');
+      };
+      brow.appendChild(g);
+      var gw = document.createElement('button');
+      gw.textContent = L('✎ добавить пожелание');
+      gw.title = L('сначала написать, что примерно должно быть на картинке, потом нарисовать');
+      gw.style.cssText = g.style.cssText;
+      gw.onclick = function (e) {
+        if (e) e.stopPropagation();
+        showWish();
+      };
+      brow.appendChild(gw);
+      d.appendChild(brow);
+    }
+    h.appendChild(d);
+    fit('strip');
+  }
+
+  var favOn = false;
+  var favBtn = null;
+  var rrEl = null;
+  var rrNum = null;
+  var rrPrev = null;
+  var rrNext = null;
+  var rrList = null;
+
+  function sigOf(v) {
+    return v.path + '|' + (v.at || '') + '|' + (v.ar || '') + (v.rr ? ('|' + v.rr.i + '/' + v.rr.n) : '');
+  }
+
+  function rrPaint() {
+    if (!rrEl) return;
+    var r = curV && curV.rr;
+    var on = !!(r && r.n > 1);
+    rrEl.style.display = on ? 'flex' : 'none';
+    if (rrPrev) rrPrev.style.display = on ? 'flex' : 'none';
+    if (rrNext) rrNext.style.display = on ? 'flex' : 'none';
+    if (!on) return;
+    rrNum.textContent = (r.i + 1) + '/' + r.n;
+    if (rrPrev) rrPrev.style.opacity = r.i > 0 ? '1' : '.3';
+    if (rrNext) rrNext.style.opacity = r.i < r.n - 1 ? '1' : '.3';
+  }
+
+  async function rrGo(dir) {
+    if (busyEl || !curV || !curV.rr) return;
+    var n = curV.rr.n;
+    var i = curV.rr.i + dir;
+    if (i < 0 || i >= n) return;
+    if (!rrList || rrList.tk !== curV.tk || !rrList.list || rrList.list.length !== n) {
+      try {
+        rrList = await tavo.get('iig_m' + msgId + '_rr', 'chat');
+      } catch (e) {
+        rrList = null;
+      }
+    }
+    var e1 = rrList && rrList.list && rrList.list[i];
+    if (e1 && e1.p && curV && curV.rr) {
+      holdAt = curV.at || 0;
+      holdUntil = Date.now() + 30000;
+      var nv = { state: 'ok', key: curV.key, tk: curV.tk, path: e1.p, ar: e1.ar || curV.ar, at: e1.at || 0, prompt: e1.prompt || '', note: e1.note || '', rr: { i: i, n: n } };
+      lastState = sigOf(nv);
+      setPic(nv);
+      fastStart();
+    }
+    sendCmd('rrsel', { i: i });
+  }
+
+  function rrBtn(txt, title, dir) {
+    var b = document.createElement('button');
+    b.title = title;
+    b.setAttribute('tabindex', '-1');
+    var NS = 'http://www.w3.org/2000/svg';
+    var sv = document.createElementNS(NS, 'svg');
+    sv.setAttribute('viewBox', '0 0 12 12');
+    sv.setAttribute('width', '12');
+    sv.setAttribute('height', '12');
+    sv.style.cssText = 'display:block;pointer-events:none;';
+    var pl = document.createElementNS(NS, 'polyline');
+    pl.setAttribute('points', dir < 0 ? '7.5,2 3.5,6 7.5,10' : '4.5,2 8.5,6 4.5,10');
+    pl.setAttribute('fill', 'none');
+    pl.setAttribute('stroke', 'currentColor');
+    pl.setAttribute('stroke-width', '1.8');
+    pl.setAttribute('stroke-linecap', 'round');
+    sv.appendChild(pl);
+    b.appendChild(sv);
+    b.style.cssText = 'position:absolute;top:50%;' + (dir < 0 ? 'left:8px;' : 'right:8px;') + 'margin:-16px 0 0;width:32px;height:32px;padding:0;box-sizing:border-box;border:1px solid rgba(230,232,236,.25);border-radius:50%;background:rgba(10,12,15,.45);color:#e6e8ec;line-height:0;cursor:pointer;display:flex;align-items:center;justify-content:center;pointer-events:auto;-webkit-tap-highlight-color:transparent;outline:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;transition:transform .15s ease,opacity .15s ease,background-color .15s ease;';
+    b.onpointerdown = function () {
+      b.style.transform = 'scale(.9)';
+    };
+    b.onpointerup = b.onpointerleave = b.onpointercancel = function () {
+      b.style.transform = '';
+    };
+    b.onclick = function (e) {
+      if (e) e.stopPropagation();
+      rrGo(dir);
+    };
+    return b;
+  }
+
+  async function favMap() {
+    try {
+      return (await tavo.get('iig_fav', 'global')) || {};
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function paintStar() {
+    if (!favBtn) return;
+    favBtn.textContent = '';
+    favBtn.appendChild(starIcon(favOn));
+    favBtn.title = favOn ? L('в избранном — чистка не тронет') : L('в избранное');
+  }
+
+  async function favLoadNow() {
+    var tk = (curV && curV.tk) || '';
+    if (!tk) return;
+    var m = await favMap();
+    if (!m) return;
+    favOn = !!m[tk];
+    paintStar();
+  }
+
+  async function favToggle() {
+    var tk = (curV && curV.tk) || '';
+    if (!tk) return toast(L('IIG: у этой картинки нет ключа — перегенерируй её'));
+    var m = await favMap();
+    if (!m) return toast(L('IIG: избранное не прочиталось — попробуй ещё раз'));
+    if (m[tk]) delete m[tk];
+    else m[tk] = 1;
+    try {
+      await tavo.set('iig_fav', m, 'global');
+    } catch (e) {
+      return toast(L('IIG: не вышло сохранить избранное'));
+    }
+
+    favOn = !!m[tk];
+    paintStar();
+  }
+
+  function ensureBtns() {
+    if (btnsWrap) {
+      btnsWrap.style.display = '';
+      return;
+    }
+    btnsWrap = document.createElement('div');
+    btnsWrap.style.cssText = 'position:absolute;inset:0;pointer-events:none;';
+    var mk = function (css, icon, title, fn, keepOpen) {
+      var s = document.createElement('div');
+      s.className = 'iig-ov';
+      s.style.cssText = 'position:absolute;' + css + 'display:none;pointer-events:auto;';
+      s.appendChild(mkBtn(icon, title, fn, keepOpen));
+      btnsWrap.appendChild(s);
+    };
+    var needFile = function () {
+      btnsWrap.lastChild.setAttribute('data-iig-file', '1');
+    };
+    mk('top:6px;left:8px;', dlIcon(), L('скачать'), function () { doDownload(curV || {}); });
+    needFile();
+    mk('top:6px;left:44px;', promptIcon(), L('промпт'), function () { showPrompt(imgEl, curV || {}); });
+    mk('top:6px;left:80px;', editIcon(), L('доработать'), function () { showEdit(imgEl, curV || {}); });
+    needFile();
+    mk('top:6px;left:116px;', upIcon(), L('улучшить качество'), function () { sendCmd('upscale'); });
+    needFile();
+    mk('top:6px;left:152px;', starIcon(favOn), L('в избранное'), favToggle, true);
+    needFile();
+    favBtn = btnsWrap.lastChild.firstChild;
+    mk('top:6px;right:8px;', regenIcon(), L('перегенерировать'), function () { sendCmd('regen'); });
+    var more = document.createElement('span');
+    more.textContent = '+3';
+    more.style.cssText = 'display:inline-block;min-width:22px;text-align:center;font:700 12px/22px Courier Prime,monospace;color:#e6e8ec;text-shadow:0 1px 4px rgba(0,0,0,.85);';
+    mk('top:6px;right:44px;', more, L('ещё три варианта по тому же промпту'), function () { sendCmd('more'); });
+    rrEl = document.createElement('div');
+    rrEl.style.cssText = 'position:absolute;left:50%;bottom:8px;transform:translateX(-50%);display:none;align-items:center;padding:2px 2px;border-radius:999px;background:rgba(10,12,15,.6);pointer-events:auto;';
+    rrEl.onclick = function (e) {
+      if (e) e.stopPropagation();
+    };
+    rrNum = document.createElement('span');
+    rrNum.style.cssText = 'min-width:30px;padding:4px 8px;text-align:center;font:700 10px/1 Courier Prime,monospace;letter-spacing:.08em;color:#e6e8ec;';
+    rrEl.appendChild(rrNum);
+    rrPrev = rrBtn('‹', L('предыдущий вариант'), -1);
+    rrNext = rrBtn('›', L('следующий вариант'), 1);
+    btnsWrap.appendChild(rrEl);
+    btnsWrap.appendChild(rrPrev);
+    btnsWrap.appendChild(rrNext);
+    wrapEl.appendChild(btnsWrap);
+    wrapEl.onclick = function () {
+      if (busyEl) return;
+      var a = btnsWrap.querySelectorAll('.iig-ov');
+      var vis = 'block';
+      for (var j = 0; j < a.length; j++) {
+        if (a[j].style.display === 'block') vis = 'none';
+      }
+      var noFile = !(curV && curV.path);
+      for (var i = 0; i < a.length; i++) a[i].style.display = (vis === 'block' && noFile && a[i].getAttribute('data-iig-file')) ? 'none' : vis;
+      if (vis === 'block') favLoadNow();
+    };
+  }
+
+  function setPic(v) {
+    curV = v;
+    if (v.tk && v.path && String(v.path).indexOf('iig_rr') < 0) {
+      variantCache[v.tk] = { path: v.path, ar: v.ar };
+      vcPut(v.tk, v.path, v.ar);
+    }
+    var src = srcOf(v.path);
+    var atV = v.at || 0;
+    var same = false;
+    var hadPic = !!(hasPic && curSrc && wrapEl);
+    if ((src === curSrc ? atV !== curAt : (srcSeen[src] !== undefined && srcSeen[src] !== atV)) && arMeasured(v.ar)) arPut(v.path, v.ar);
+    var arK = arByPath[v.path] || (arMeasured(v.ar) ? v.ar : '');
+    if (arK) ensureBox(arK);
+    else if (!wrapEl || !hadPic) ensureBox(v.ar || '');
+    imgEl.onload = fitAr;
+    if (src !== curSrc) {
+      curSrc = src;
+      imgEl.onerror = function () { srcFallback(imgEl, v.path); };
+      if (srcSeen[src] !== undefined && srcSeen[src] !== atV) {
+        freshBytes(v.path, hadPic).then(function (ok) {
+          if (!ok && curV === v && curSrc === src && imgEl) {
+            imgShow(v.path, src, hadPic);
+            seenPut(src, atV);
+          }
+        });
+      } else {
+        imgShow(v.path, src, hadPic);
+        seenPut(src, atV);
+      }
+    } else if (atV !== curAt) {
+      freshBytes(v.path, hadPic);
+    } else {
+      same = true;
+    }
+    curAt = atV;
+    hasPic = true;
+    imgEl.style.cssText = imgCss(curRat, false);
+    if (v.key) imgEl.setAttribute('data-iig-key', v.key);
+    clearBusy();
+    ensureBtns();
+    rrPaint();
+    if (same && imgEl.complete && imgEl.naturalWidth > 0) fitAr();
+    else fit('setPic');
+  }
+
+  function imgShow(p, s, pre) {
+    var my = ++preSeq;
+    var im = null;
+    if (pre) {
+      try {
+        im = new Image();
+      } catch (e) {
+        im = null;
+      }
+    }
+    if (!im) {
+      imgEl.src = s;
+      return;
+    }
+    var done = false;
+    var fin = function (ok) {
+      if (done) return;
+      done = true;
+      im.onload = im.onerror = null;
+      if (my !== preSeq || !curV || curV.path !== p || !imgEl) return;
+      var W = ok ? (im.naturalWidth || 0) : 0;
+      var H = ok ? (im.naturalHeight || 0) : 0;
+      if (W > 0 && H > 0) {
+        arPut(p, W + ':' + H);
+        ensureBox(W + ':' + H);
+        fit('pre');
+      }
+      imgEl.src = s;
+    };
+    im.onload = function () { fin(true); };
+    im.onerror = function () { fin(false); };
+    im.src = s;
+  }
+
+  async function freshBytes(p, pre) {
+    var f = fileParts(p);
+    if (!f) return false;
+    var scopes = f.scope === 'chat' ? ['chat', 'global'] : ['global', 'chat'];
+    for (var i = 0; i < scopes.length; i++) {
+      var d = null;
+      try {
+        d = await tavo.file.load(f.name, { encoding: 'dataUrl', scope: scopes[i] });
+      } catch (e) {
+        d = null;
+      }
+      if (!curV || curV.path !== p) return false;
+      if (d) {
+        imgShow(p, asImgSrc(d), pre);
+        return true;
+      }
+    }
+    return false;
+  }
+
+  function urlHhmm(ms) {
+    try {
+      var d = new Date(Number(ms) || 0);
+      var p = function (n) { return (n < 10 ? '0' : '') + n; };
+      return p(d.getHours()) + ':' + p(d.getMinutes());
+    } catch (e) {
+      return '';
+    }
+  }
+
+  var urlBad = {};
+
+  function urlPic(v) {
+    var u = String(v.url || '');
+    var exp = Number(v.urlExp) || 0;
+    if (!/^https:\/\//i.test(u) || (exp && Date.now() > exp)) {
+      showStrip(L('картинка Tensor не сохранилась — ссылка истекла'), 'regen');
+      return;
+    }
+    if (urlBad[u]) {
+      showStrip(L('картинка Tensor по ссылке не загрузилась'), 'regen');
+      return;
+    }
+    var sig = 'url|' + u + '|' + (v.at || '');
+    if (stripSig === sig && wrapEl) return;
+    var h = host();
+    if (!h) return;
+    h.textContent = '';
+    wrapEl = imgEl = btnsWrap = busyEl = rrEl = rrNum = rrPrev = rrNext = null;
+    curV = null;
+    curSrc = '';
+    curAt = 0;
+    curRat = '';
+    hasPic = false;
+    ensureBox(arMeasured(v.ar) ? v.ar : (v.ar || ''));
+    stripSig = sig;
+    curV = v;
+    imgEl.onload = fitAr;
+    imgEl.onerror = function () {
+      if (curV !== v) return;
+      urlBad[u] = 1;
+      showStrip(L('картинка Tensor по ссылке не загрузилась'), 'regen');
+    };
+    imgEl.style.cssText = imgCss(curRat, false);
+    imgEl.setAttribute('referrerpolicy', 'no-referrer');
+    imgEl.src = u;
+    hasPic = true;
+    var t = document.createElement('div');
+    t.className = 'iig-urlnote';
+    t.textContent = L('картинка не скачалась — показана по ссылке до ') + urlHhmm(exp);
+    t.style.cssText = 'max-width:512px;margin:4px auto 2px;text-align:center;font:400 9px/1.5 Courier Prime,monospace;letter-spacing:.1em;text-transform:uppercase;color:#9aa3ad;';
+    h.appendChild(t);
+    clearBusy();
+    ensureBtns();
+    rrPaint();
+    fit('url');
+  }
+
+  function clearAll() {
+    if (!wrapEl && !stripSig) return;
+    host().textContent = '';
+    stripSig = '';
+    wrapEl = imgEl = btnsWrap = busyEl = rrEl = rrNum = rrPrev = rrNext = null;
+    curSrc = '';
+    curAt = 0;
+    curRat = '';
+    hasPic = false;
+    curV = null;
+    fit('clear');
+  }
+
+  var holdAt = 0;
+  var holdUntil = 0;
+  var phUntil = 0;
+  var fastUntil = 0;
+
+  function fastStart() {
+    fastUntil = Date.now() + 180000;
+    try {
+      localStorage.setItem('iig_fast:' + msgId, String(fastUntil));
+    } catch (e) {}
+    try { clearInterval(idleT); } catch (e0) {}
+    idleT = null;
+    idle();
+  }
+
+  function fastLoad() {
+    try {
+      var now = Date.now();
+      var drop = [];
+      for (var i = 0; i < localStorage.length && drop.length < 50; i++) {
+        var k = localStorage.key(i);
+        if (!k || k.indexOf('iig_fast:') !== 0) continue;
+        var t = parseInt(localStorage.getItem(k) || '0', 10) || 0;
+        if (t < now - 86400000) drop.push(k);
+      }
+      for (var j = 0; j < drop.length; j++) localStorage.removeItem(drop[j]);
+      var mine = parseInt(localStorage.getItem('iig_fast:' + msgId) || '0', 10) || 0;
+      if (mine > now) fastUntil = mine;
+    } catch (e) {}
+  }
+
+  async function sendCmd(op, extra) {
+    var sk = cmdKeyGet();
+    if (!sk && (op === 'setprompt' || (op === 'regen' && extra && extra.prompt))) {
+      toast(L('свой промпт с поста на этом устройстве не принимается: фрагмент не видит хранилище плагина — нажми ↻ без своего промпта'));
+      return false;
+    }
+    try {
+      var arQ = (curV && curV.ar) || cfgAr;
+      if (op === 'regen' || op === 'more' || op === 'restyle') {
+        holdAt = (curV && curV.at) || 0;
+        holdUntil = Date.now() + 20000;
+
+        showBusy(arQ, L('рисую картинку…'), 'stop');
+      } else if (op === 'edit') {
+        holdAt = (curV && curV.at) || 0;
+        holdUntil = Date.now() + 20000;
+        showBusy(arQ, L('дорабатываю…'), 'stop');
+      } else if (op === 'upscale') {
+        holdAt = (curV && curV.at) || 0;
+        holdUntil = Date.now() + 20000;
+        showBusy(arQ, L('улучшаю качество…'), 'stop');
+      } else if (op === 'stopall' && busyEl) {
+        holdAt = (curV && curV.at) || 0;
+        holdUntil = Date.now() + 2500;
+        showBusy(arQ, L('останавливаю…'), 'none');
+      }
+      if (op === 'regen' || op === 'more' || op === 'restyle' || op === 'edit' || op === 'upscale') fastStart();
+    } catch (e) {}
+    var cmd = { op: op, id: msgId, at: Date.now(), cid: String(Date.now()) + '_' + Math.random().toString(36).slice(2, 6) };
+    if (extra) for (var k in extra) cmd[k] = extra[k];
+    cmd.at = Date.now();
+    if (sk) cmd.sig = hmacHex(sk, cmdCanon(cmd, true));
+
+    var sent = false;
+    try {
+      var q = null;
+      try {
+        q = await tavo.get('iigp_cmdq', 'global');
+      } catch (e0) {}
+      if (!Array.isArray(q)) q = [];
+      q.push(cmd);
+      if (q.length > 8) q = q.slice(q.length - 8);
+      await tavo.set('iigp_cmdq', q, 'global');
+
+      for (var vr = 0; vr < 2; vr++) {
+        var chk = null;
+        try {
+          chk = await tavo.get('iigp_cmdq', 'global');
+        } catch (e1) {}
+
+        if (!Array.isArray(chk) || !chk.length) break;
+        var mine = false;
+        for (var ci = 0; ci < chk.length; ci++) {
+          if (chk[ci] && chk[ci].cid === cmd.cid) { mine = true; break; }
+        }
+        if (mine) break;
+        var q2 = Array.isArray(chk) ? chk.slice() : [];
+        q2.push(cmd);
+        if (q2.length > 8) q2 = q2.slice(q2.length - 8);
+        try {
+          await tavo.set('iigp_cmdq', q2, 'global');
+        } catch (e2) {}
+      }
+      sent = true;
+    } catch (e) {}
+    if (!sent) {
+      try {
+        await tavo.set('iigp_cmd', cmd, 'global');
+      } catch (e) {}
+    }
+
+    try {
+      localStorage.setItem('iig_ping', String(Date.now()));
+    } catch (e) {}
+    setTimeout(function () { poll(0); }, 500);
+  }
+
+  async function doDownload(v) {
+    try {
+      if (String(v.path).indexOf('data:') === 0) {
+        tavo.utils.export('image.png', String(v.path).split(',')[1]);
+        return;
+      }
+      var f = fileParts(v.path);
+      var name = f ? f.name : String(v.path).split('/').pop();
+      var b64 = await tavo.file.load(name, f ? { encoding: 'base64', scope: f.scope } : { encoding: 'base64' });
+      if (b64) tavo.utils.export(name, b64);
+      else tavo.utils.preview(srcOf(v.path));
+    } catch (e) {
+      try { tavo.utils.toast(L('скачать не вышло: ') + (e && e.message)); } catch (x) {}
+    }
+  }
+
+  async function readLegacy() {
+    try {
+      var txt = String((msg && msg.content) || '');
+      var m = txt.match(/\[IMG:(?:GEN|OK|FAIL):([a-z0-9_]{1,39})\]/i);
+      if (!m) return null;
+      var key = m[1];
+      var src = await tavo.get('iig_' + key.replace(/^iig_/, ''), 'chat');
+      if (!src) src = await tavo.get(key, 'chat');
+      if (!src) return null;
+      var prompt = '';
+      try {
+        prompt = String((await tavo.get('iig_' + key.replace(/^iig_/, '') + '_p', 'chat')) || '');
+      } catch (e) {}
+      return { state: 'ok', path: src, prompt: prompt, legacy: true, ar: '' };
+    } catch (e) {
+      return undefined;
+    }
+  }
+
+  function tkOf(c) {
+    c = String(c || '');
+
+    var re = /<!--\s*iig:([a-z0-9_]{4,40})\s*-->/gi;
+    var mk = null;
+    var mm = re.exec(c);
+    while (mm) {
+      mk = mm;
+      mm = re.exec(c);
+    }
+    if (mk) return mk[1].toLowerCase();
+    c = c
+      .replace(/<[^>]{0,}>/g, ' ')
+      .replace(/[^0-9A-Za-z\u0400-\u04FF]+/g, ' ')
+      .trim().toLowerCase().slice(0, 600);
+    var n = 2166136261;
+    for (var i = 0; i < c.length; i++) n = Math.imul(n ^ c.charCodeAt(i), 16777619) >>> 0;
+    return n.toString(36);
+  }
+
+  function staleFor(v) {
+    return !!(v && v.tk && msg && msg.content && v.tk !== tkOf(msg.content));
+  }
+
+  var variantCache = {};
+
+  function vcGet(tk) {
+    try {
+      var raw = localStorage.getItem('iig_vc:' + tk);
+      if (!raw) return null;
+      var o = JSON.parse(raw);
+      return (o && o.p) ? o : null;
+    } catch (e) {
+      return null;
+    }
+  }
+  function vcPut(tk, path, ar) {
+    try {
+      localStorage.setItem('iig_vc:' + tk, JSON.stringify({ p: path, ar: ar || '' }));
+      var idx = [];
+      try {
+        idx = JSON.parse(localStorage.getItem('iig_vc_idx') || '[]');
+      } catch (e0) {}
+      idx = idx.filter(function (x) { return x !== tk; });
+      idx.push(tk);
+      while (idx.length > 100) {
+        try {
+          localStorage.removeItem('iig_vc:' + idx.shift());
+        } catch (e1) {}
+      }
+      localStorage.setItem('iig_vc_idx', JSON.stringify(idx));
+    } catch (e) {}
+  }
+  function vcDrop(tk) {
+    try {
+      localStorage.removeItem('iig_vc:' + tk);
+    } catch (e) {}
+  }
+  async function rolledView() {
+    try {
+      var tkNow = tkOf((msg && msg.content) || '');
+      if (!tkNow) return null;
+      var c = variantCache[tkNow];
+      if (c) return { state: 'ok', key: 'iig_m' + msgId, tk: tkNow, path: c.path, ar: c.ar || '', at: 1, syn: 1 };
+      var cv = vcGet(tkNow);
+      if (cv) return { state: 'ok', key: 'iig_m' + msgId, tk: tkNow, path: cv.p, ar: cv.ar || '', at: 1, syn: 1 };
+      var name = 'iig_' + tkNow + '.png';
+
+      var scope = '';
+      var meta = '';
+      var r1 = await Promise.all([
+        Promise.resolve(tavo.file.exists(name, { scope: 'chat' })).catch(function () { return false; }),
+        Promise.resolve(tavo.file.load('iig_' + tkNow + '.json', { scope: 'chat' })).catch(function () { return ''; })
+      ]);
+      if (r1[0]) { scope = 'chat'; meta = r1[1]; }
+      else {
+        var r2 = await Promise.all([
+          Promise.resolve(tavo.file.exists(name, { scope: 'global' })).catch(function () { return false; }),
+          Promise.resolve(tavo.file.load('iig_' + tkNow + '.json', { scope: 'global' })).catch(function () { return ''; })
+        ]);
+        if (r2[0]) { scope = 'global'; meta = r2[1]; }
+      }
+      if (!scope) return null;
+      var ar = '';
+      try {
+        if (meta) ar = String((JSON.parse(String(meta)) || {}).ar || '');
+      } catch (e) {}
+      variantCache[tkNow] = { path: 'files/' + scope + '/' + name, ar: ar };
+      var ks = Object.keys(variantCache);
+      if (ks.length > 12) delete variantCache[ks[0]];
+      return { state: 'ok', key: 'iig_m' + msgId, tk: tkNow, path: 'files/' + scope + '/' + name, ar: ar || '', at: 1, syn: 1 };
+    } catch (e) {
+      return null;
+    }
+  }
+
+  var staleMiss = null;
+  async function read() {
+    var own = null;
+    try {
+      own = await tavo.get('iig_m' + msgId, 'chat');
+    } catch (e) {
+      return undefined;
+    }
+    if (own && own.state && staleFor(own)) {
+      var before = String((msg && msg.content) || '');
+      try {
+        var m2 = await tavo.message.current();
+        if (m2 && m2.id === msgId && m2.content) msg = m2;
+      } catch (e2) {}
+      var after = String((msg && msg.content) || '');
+      if (own.state === 'ok' && staleFor(own) && after === before && !/<!--\s*iig:[a-z0-9_]{4,40}\s*-->/i.test(after)) {
+        staleMiss = null;
+        return own;
+      }
+    }
+    if (own && own.state && !staleFor(own)) {
+      staleMiss = null;
+      return own;
+    }
+    if (own && own.state) {
+      var rv = await rolledView();
+      if (rv || own.state !== 'ok') {
+        staleMiss = null;
+        return rv;
+      }
+      var tkN = tkOf((msg && msg.content) || '');
+      var tNow = Date.now();
+      if (staleMiss && staleMiss.tk === tkN && tNow - staleMiss.at >= 2000) {
+        staleMiss = null;
+        return null;
+      }
+      if (!staleMiss || staleMiss.tk !== tkN) staleMiss = { tk: tkN, at: tNow };
+      return undefined;
+    }
+    staleMiss = null;
+    try {
+      var old = await tavo.get('iig_img', { scope: 'message', id: msgId });
+      if (old && old.state && !staleFor(old)) {
+        if (await tavo.get('iig_m' + msgId + '_x', 'chat')) return readLegacy();
+        return old;
+      }
+    } catch (e) {
+      return undefined;
+    }
+    return readLegacy();
+  }
+
+  function render(v) {
+    if (v === undefined) return false;
+    if (!v || !v.state) {
+      if (busyEl && Date.now() < holdUntil) return true;
+
+      if (curV && curV.ph && Date.now() < phUntil) return false;
+
+      if (!skipNote) clearAll();
+      return false;
+    }
+    skipNote = false;
+    if (v.state === 'prompt' || v.state === 'image') {
+      var ar = v.ar || (curV && curV.ar) || cfgAr;
+      showBusy(ar, v.state === 'prompt' ? L('пишу промпт…') : L('рисую картинку…'), 'stop');
+      return true;
+    }
+    if (v.state === 'error') {
+
+      showStrip((v.stopped ? '' : L('картинка не вышла: ')) + errMask(v.error), 'regen');
+      return false;
+    }
+    if (v.state === 'ok' && !v.path && v.url) {
+      urlPic(v);
+      return false;
+    }
+    if (v.state === 'ok' && v.path) {
+      if (holdUntil > Date.now() && (v.at || 0) === holdAt) return true;
+      holdUntil = 0;
+      var sig = sigOf(v);
+      if (sig !== lastState) {
+        lastState = sig;
+        setPic(v);
+      } else if (busyEl) {
+        setPic(v);
+      }
+      return false;
+    }
+    return false;
+  }
+
+  var chainT = null;
+  var probeT = null;
+  var slowT = null;
+  function later(step, ms) {
+    clearTimeout(chainT);
+    chainT = setTimeout(function () {
+      if (iigGone()) return iigTeardown();
+      poll(step);
+    }, ms);
+  }
+
+  iigTimersOff = function () {
+    try { clearTimeout(chainT); } catch (e0) {}
+    try { clearInterval(idleT); } catch (e0) {}
+    idleT = null;
+    try { clearInterval(probeT); } catch (e0) {}
+    try { clearInterval(slowT); } catch (e0) {}
+    try { clearTimeout(fitT); } catch (e0) {}
+    try { clearTimeout(guardT); } catch (e0) {}
+    try { if (fitRo) fitRo.disconnect(); } catch (e0) {}
+    fitRo = null;
+  };
+
+  var idleT = null;
+  var isLastMsg = false;
+  var idleN = 0;
+  var watchTk = '';
+  var watchSt = '';
+  function idle() {
+    if (iigDead) return;
+    if (idleT) return;
+    if (isLastMsg || Date.now() < fastUntil) {
+
+      idleT = setInterval(async function () {
+        if (iigGone()) return iigTeardown();
+        if (!isLastMsg && Date.now() >= fastUntil) {
+          try { clearInterval(idleT); } catch (e2) {}
+          idleT = null;
+          return idle();
+        }
+        if (document.hidden) return;
+        idleN++;
+        if (idleN % 8 === 0) return later(90, 0);
+        try {
+          var mP = tavo.message.current();
+          var sP = null;
+          try { sP = Promise.resolve(tavo.get('iig_m' + msgId, 'chat')); } catch (e0) {}
+          var m2 = await mP;
+          var s2 = null;
+          if (sP) { try { s2 = await sP; } catch (e1) {} }
+          if (s2 && s2.state) {
+            var sg = s2.state + '|' + (s2.path || '') + '|' + (s2.at || '') + '|' + (s2.ar || '');
+            if (sg !== watchSt) {
+              watchSt = sg;
+              return later(0, 0);
+            }
+          }
+          if (m2 && m2.id === msgId && m2.content) {
+            var t2 = tkOf(m2.content);
+            if ((curV && curV.tk === t2) || watchTk === t2) return;
+            watchTk = t2;
+            msg = m2;
+            later(0, 0);
+          }
+        } catch (e) {}
+
+      }, 5000);
+      return;
+    }
+
+    idleT = setInterval(function () {
+      if (iigGone()) return iigTeardown();
+      if (document.hidden) return;
+      later(90, 0);
+    }, 120000 + Math.floor(Math.random() * 45000));
+  }
+
+  async function poll(step) {
+    var v = await read();
+    if (v === undefined && staleMiss) {
+      render(v);
+      return later(step + 1, 2100);
+    }
+    if (v !== undefined && (!v || !v.state) && step === 8 && Date.now() < fastUntil && Date.now() < holdUntil) {
+      render(v);
+      return later(8, 1500);
+    }
+    if (v !== undefined && (!v || !v.state) && step === 8 && autoOn !== false) {
+
+      var last = null;
+      try {
+        last = await tavo.get('iigp_auto_last', 'global');
+      } catch (e) {}
+
+      if (last && last.id === msgId && last.skipped) {
+        skipNote = true;
+        showStrip(isLastMsg ? last.skipped : '', 'gen');
+        return idle();
+      }
+      if (!last || last.id !== msgId) {
+        skipNote = true;
+        showStrip(isLastMsg ? L('движок не увидел этот пост') : '', 'gen');
+        return idle();
+      }
+    }
+    var busy = render(v);
+    if (busy && step < 200) return later(step + 1, step < 40 ? 1500 : 4000);
+
+    if (!busy && !isLastMsg && v && v.state === 'ok') return idle();
+    if (step < 8) return later(step + 1, 1500);
+    idle();
+  }
+
+  var bootDelay = 50;
+  try {
+    var btm = parseInt(localStorage.getItem('iig_btm') || '0', 10) || 0;
+    var bnow = Date.now();
+
+    if (bnow - btm < 400) bootDelay = 250;
+    localStorage.setItem('iig_btm', String(bnow));
+  } catch (e) {}
+  setTimeout(function () {
+  (async function () {
+
+    var vmP = null;
+    try {
+      vmP = Promise.resolve(tavo.get('iig_vm', 'chat'));
+    } catch (e) {
+      vmP = null;
+    }
+    try {
+      msg = await tavo.message.current();
+    } catch (e) {}
+    if (!msg || !msg.id) {
+      fit('boot');
+      return;
+    }
+    msgId = msg.id;
+    fastLoad();
+    var tk0 = '';
+    var isChar = msg.role === 'assistant' && !msg.hidden;
+
+    try {
+      if (isChar) {
+        tk0 = tkOf(msg.content || '');
+        var c0 = tk0 ? vcGet(tk0) : null;
+        if (c0) {
+          var ar0 = c0.ar || '';
+          setPic({ state: 'ok', key: 'iig_m' + msgId, tk: tk0, path: c0.p, ar: ar0, at: 1, syn: 1 });
+          lastState = c0.p + '|1|' + ar0;
+        }
+      }
+    } catch (e) {}
+    if (isChar && vmP) {
+      vmP.then(function (vm0) {
+        try {
+          if (hasPic) return;
+          var e0 = vm0 && vm0[msgId];
+          if (!e0 || !e0.p) return;
+          if (e0.tk && e0.tk === tk0) {
+            var arV = e0.ar || '';
+            setPic({ state: 'ok', key: 'iig_m' + msgId, tk: tk0, path: e0.p, ar: arV, at: 1, syn: 1 });
+            lastState = e0.p + '|1|' + arV;
+          } else {
+            phUntil = Date.now() + 15000;
+            setPic({ state: 'ok', key: 'iig_m' + msgId, tk: '', path: e0.p, ar: e0.ar || '', at: 1, syn: 1, ph: 1 });
+          }
+        } catch (e) {}
+      }, function () {});
+    }
+
+    var preSt = null;
+    await Promise.all([
+      applyFrameCss(),
+      (async function () {
+
+        try {
+          var cntL = await tavo.message.count();
+
+          if (typeof msg.index === 'number') {
+            isLastMsg = (msg.index === cntL - 1);
+          } else {
+            var lastL = await tavo.message.find(cntL - 1);
+            isLastMsg = !!(lastL && lastL[0] && lastL[0].id === msgId);
+          }
+        } catch (e) {}
+      })(),
+      (async function () {
+        try {
+          preSt = await tavo.get('iig_m' + msgId, 'chat');
+          if (!preSt || !preSt.state) {
+            try {
+              preSt = await tavo.get('iig_img', { scope: 'message', id: msgId });
+            } catch (e0) {}
+          }
+
+          if (isChar && preSt && preSt.state === 'ok' && preSt.path && !staleFor(preSt) && (!hasPic || (curV && curV.ph))) {
+            phUntil = 0;
+            lastState = sigOf(preSt);
+            setPic(preSt);
+          }
+        } catch (e) {}
+      })()
+    ]);
+
+    try {
+      if (autoOn !== false && !hasPic && (!preSt || !preSt.state) && msg.role === 'assistant' && !msg.hidden && String(msg.content || '').length > 40 && isLastMsg) {
+        showBusy(cfgAr, L('жду картинку…'), 'none');
+      } else if (!hasPic && (!preSt || !preSt.state) && msg.role === 'assistant' && !msg.hidden && isLastMsg) {
+        skipNote = true;
+        showStrip('', 'gen');
+      }
+    } catch (e) {}
+
+    try {
+      iigListen(window, 'storage', function (ev) {
+        if (iigGone()) return iigTeardown();
+        if (!ev) return;
+
+        if (ev.key === 'iig_rev') return later(0, 0);
+        if (ev.key !== 'iig_frame_css' && ev.key !== 'iig_frame_rev') return;
+        applyFrameCss(true);
+      });
+    } catch (e) {}
+    try {
+      iigListen(document, 'visibilitychange', function () {
+        if (iigGone()) return iigTeardown();
+        if (!document.hidden) applyFrameCss(true);
+      });
+    } catch (e) {}
+
+    if (isChar && !isLastMsg && !hasPic && (!preSt || !preSt.state)) {
+      if (msg.role === 'assistant' && !msg.hidden) {
+        skipNote = true;
+        showStrip('', 'gen');
+      }
+      later(90, 12000);
+      if (Date.now() < fastUntil) poll(0);
+      idle();
+      return;
+    }
+    var probeN = 0;
+    probeT = setInterval(function () {
+      if (iigGone()) return iigTeardown();
+      probeN++;
+      var seen = null;
+      try {
+        seen = localStorage.getItem('iig_frame_css');
+      } catch (e) {}
+      if (seen) {
+        clearInterval(probeT);
+        applyFrameCss(true);
+        return;
+      }
+      applyFrameCss(true);
+      if (!isLastMsg && probeN >= 2) {
+        clearInterval(probeT);
+        return;
+      }
+      if (probeN >= 10) {
+        clearInterval(probeT);
+        if (!isLastMsg) return;
+        var slowN = 0;
+        slowT = setInterval(function () {
+          if (iigGone()) return iigTeardown();
+          if (document.hidden) return;
+          slowN++;
+          applyFrameCss(slowN % 8 !== 0);
+        }, 8000);
+      }
+    }, 3000);
+    poll(0);
+  })();
+  }, bootDelay);
+})();
+
+  } catch (e) {
+    iigFail(e, L('загрузка'));
+  }
+})();
+</script>

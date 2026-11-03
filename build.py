@@ -3,22 +3,24 @@ import hashlib
 import json
 from pathlib import Path
 import re
-import subprocess
-import sys
 import zipfile
 
 ROOT = Path(__file__).resolve().parent
-PLUGIN = ROOT / 'plugin_p2'
+PLUGIN = ROOT / 'src'
 
 
 def main():
-    subprocess.run([sys.executable, str(ROOT / 'build_p95.py')], cwd=ROOT, check=True)
     manifest = json.loads((PLUGIN / 'manifest.json').read_text(encoding='utf-8'))
     version = manifest['version']
     if not re.fullmatch(r'\d+\.\d+\.\d+', version):
         raise ValueError('Expected a numeric major.minor.patch version')
-    files = {p.relative_to(PLUGIN).as_posix(): p for p in PLUGIN.rglob('*') if p.is_file()}
-    files.update({name: ROOT / name for name in ['LICENSE', 'NOTICE', 'CREDITS.md']})
+    paths = ['manifest.json', manifest['entry'], manifest['cover']]
+    paths += list(manifest['localization']['resources'].values())
+    paths += [item['src'] for item in manifest['contributes']['htmlFragments']]
+    paths += [item['icon'] for item in manifest['contributes']['inputActions']]
+    paths += ['previews/styles.jpg']
+    files = {name: PLUGIN / name for name in paths}
+    files.update({name: ROOT / name for name in ['LICENSE', 'CREDITS.md']})
     outdir = ROOT / 'dist'
     outdir.mkdir(exist_ok=True)
     package = outdir / f'tavo-images-{version}.tpg'

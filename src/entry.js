@@ -30,7 +30,7 @@
  * Tavo adaptation and modifications: Copyright (C) 2026 NotFound_404 / Not_Found.
  * Maintainer: https://github.com/NotFound404dev
  * Modified for Tavo; publication packaging updated 2026-11-03.
- * See LICENSE and NOTICE. SPDX-License-Identifier: AGPL-3.0-or-later
+ * See LICENSE and CREDITS.md. SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
 
